@@ -89,12 +89,14 @@ def start_gan(category, image_count, model, lora, weights, trigger, negative, st
 
 def generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_path, sampling, schedule, step,
                     styles, trigger, weights):
+    lora = str(lora).split()
+    trigger = str(trigger).split()
     result = []
     for prompt in prompts:
         new_prompt = ""
-        if lora:
+        if lora != "":
             new_prompt += f'<lora:{lora}:{weights}>, '
-        if trigger:
+        if trigger != "":
             new_prompt += f'{trigger}, '
         new_prompt += prompt
         images = generate_image_by_sd(
