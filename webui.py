@@ -92,11 +92,13 @@ def generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_
     lora = str(lora).strip()
     trigger = str(trigger).strip()
     result = []
+    print(lora)
+    print(trigger)
     for prompt in prompts:
         new_prompt = ""
-        if lora != "":
+        if lora != "" and lora != "None":
             new_prompt += f'<lora:{lora}:{weights}>, '
-        if trigger != "":
+        if trigger != "" and trigger != "None":
             new_prompt += f'{trigger}, '
         new_prompt += prompt
         images = generate_image_by_sd(
