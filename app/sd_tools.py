@@ -15,6 +15,8 @@ def get_loras(root_path: str = app.config.sd_lora_path) -> list[str]:
     for item in os.listdir(root_path):
         if item.startswith("."):
             continue
+        if not item.endswith(".safetensors"):
+            continue
         child_path = f"{root_path}/{item}"
         if os.path.isdir(child_path):
             loras.extend(get_loras(child_path))
@@ -27,6 +29,8 @@ def get_models(root_path: str = app.config.sd_model_path) -> list[str]:
     models = []
     for item in os.listdir(root_path):
         if item.startswith("."):
+            continue
+        if not item.endswith(".safetensors"):
             continue
         child_path = f"{root_path}/{item}"
         if os.path.isdir(child_path):
