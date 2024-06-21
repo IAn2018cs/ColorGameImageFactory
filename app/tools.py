@@ -66,6 +66,10 @@ def get_timestamp() -> int:
     return int(round(t * 1000))
 
 
+def get_current_datatime():
+    return time.strftime("%Y%m%d_%H_%M_%S", time.localtime())
+
+
 def generate_random_id(length=10):
     characters = string.ascii_letters + string.digits  # 包含所有字母（大写和小写）和数字
     return ''.join(random.choice(characters) for _ in range(length))  # 随机选择字符
@@ -134,3 +138,22 @@ def split_list_with_min_length(original_list: list, min_length: int) -> list[lis
             start += min_length
 
     return result
+
+
+def __get_path_name__(root_path, item):
+    return f"{root_path}/{item}"
+
+
+def get_all_file_path(root_path: str, suffix: list[str], process=__get_path_name__) -> list[str]:
+    files = []
+    for item in os.listdir(root_path):
+        if item.startswith("."):
+            continue
+        child_path = f"{root_path}/{item}"
+        if os.path.isdir(child_path):
+            files.extend(get_all_file_path(child_path, suffix, process))
+        else:
+            file_suffix = item.split('.')[-1].lower()
+            if file_suffix in suffix:
+                files.append(process(root_path, item))
+    return files

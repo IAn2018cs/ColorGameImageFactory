@@ -1,5 +1,4 @@
 # coding=utf-8
-import os
 
 import requests
 
@@ -8,6 +7,7 @@ from app.tools import convert2rgb_image
 from app.tools import create_path
 from app.tools import delete_file
 from app.tools import generate_random_id
+from app.tools import get_all_file_path
 from app.tools import get_base64_image
 from app.tools import get_column_data
 from app.tools import get_timestamp
@@ -15,31 +15,17 @@ from app.tools import save_base64_image
 
 
 def get_loras(root_path: str = app.config.sd_lora_path) -> list[str]:
-    loras = []
-    for item in os.listdir(root_path):
-        if item.startswith("."):
-            continue
-        child_path = f"{root_path}/{item}"
-        if os.path.isdir(child_path):
-            loras.extend(get_loras(child_path))
-        else:
-            if item.endswith(".safetensors"):
-                loras.append(item.split(".")[0])
-    return loras
+    def get_file_name(path, item):
+        return item.split(".")[0]
+
+    return get_all_file_path(root_path, ["safetensors", "pt"], get_file_name)
 
 
 def get_models(root_path: str = app.config.sd_model_path) -> list[str]:
-    models = []
-    for item in os.listdir(root_path):
-        if item.startswith("."):
-            continue
-        child_path = f"{root_path}/{item}"
-        if os.path.isdir(child_path):
-            models.extend(get_models(child_path))
-        else:
-            if item.endswith(".safetensors"):
-                models.append(item.split(".")[0])
-    return models
+    def get_file_name(path, item):
+        return item.split(".")[0]
+
+    return get_all_file_path(root_path, ["safetensors", "pt"], get_file_name)
 
 
 def get_styles() -> list[str]:
