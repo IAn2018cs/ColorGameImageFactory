@@ -12,20 +12,37 @@ from app.tools import get_base64_image
 from app.tools import get_column_data
 from app.tools import get_timestamp
 from app.tools import save_base64_image
+import shutil
 
 
-def get_loras(root_path: str = app.config.sd_lora_path) -> list[str]:
+def get_loras() -> list[str]:
     def get_file_name(path, item):
         return item.split(".")[0]
 
-    return get_all_file_path(root_path, ["safetensors", "pt"], get_file_name)
+    return get_all_file_path(app.config.sd_lora_path, ["safetensors", "pt"], get_file_name)
 
 
-def get_models(root_path: str = app.config.sd_model_path) -> list[str]:
+def get_models() -> list[str]:
     def get_file_name(path, item):
         return item.split(".")[0]
 
-    return get_all_file_path(root_path, ["safetensors", "pt"], get_file_name)
+    return get_all_file_path(app.config.sd_model_path, ["safetensors", "pt"], get_file_name)
+
+
+def get_train_loras() -> list[str]:
+    exit_loras = get_loras()
+
+    def get_file_name(path, item):
+        name = item.split(".")[0]
+        if name in exit_loras:
+            return name
+        output_path = str(path).replace(f"{app.config.train_output_path}/", '')
+        new_path = f'{app.config.sd_lora_path}/{output_path}'
+        create_path(new_path)
+        shutil.copy(f'{path}/{item}', f'{new_path}/{item}')
+        return name
+
+    return get_all_file_path(app.config.train_output_path, ["safetensors", "pt"], get_file_name)
 
 
 def get_styles() -> list[str]:

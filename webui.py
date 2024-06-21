@@ -6,7 +6,7 @@ import app.config
 from app.prompt_factory import create_sd_prompts
 from app.sd_tools import convert_image_line_art
 from app.sd_tools import generate_image_by_sd
-from app.sd_tools import get_loras
+from app.sd_tools import get_train_loras
 from app.sd_tools import get_models
 from app.sd_tools import get_styles
 from app.tools import generate_random_id
@@ -54,7 +54,7 @@ def refresh_models(d):
 
 
 def refresh_loras(d):
-    return gr.update(d, choices=get_loras())
+    return gr.update(d, choices=get_train_loras())
 
 
 def get_all_category() -> list[str]:
@@ -178,7 +178,7 @@ def build_webui():
                 with gr.Row(equal_height=False):
                     with gr.Column():
                         lora = gr.Dropdown(
-                            choices=get_loras(),
+                            choices=get_train_loras(),
                             multiselect=False,
                             label="Lora"
                         )
