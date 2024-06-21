@@ -6,6 +6,8 @@ import requests
 import app.config
 from app.tools import convert2rgb_image
 from app.tools import create_path
+from app.tools import delete_file
+from app.tools import generate_random_id
 from app.tools import get_base64_image
 from app.tools import get_column_data
 from app.tools import get_timestamp
@@ -78,7 +80,7 @@ def generate_image_by_sd(root_path: str, batch_id: str,
         images = response.json()['images']
         files = []
         for image in images:
-            path = f'{output_path}/{get_timestamp()}.png'
+            path = f'{output_path}/{get_timestamp()}_{generate_random_id(4)}.png'
             save_base64_image(path, image)
             files.append(path)
         return files
@@ -111,7 +113,7 @@ def controlnet_image_preprocessor(root_path: str, batch_id: str, preprocessor: s
         images = response.json()['images']
         files = []
         for image in images:
-            path = f'{output_path}/{get_timestamp()}.png'
+            path = f'{output_path}/{get_timestamp()}_{generate_random_id(4)}.png'
             save_base64_image(path, image)
             files.append(path)
         return files
@@ -124,5 +126,7 @@ def convert_image_line_art(root_path: str, batch_id: str, image_paths: list[str]
     base64_images = [get_base64_image(convert2rgb_image(path)) for path in image_paths]
     black_image_paths = controlnet_image_preprocessor(root_path, batch_id, "softedge_anyline", base64_images,
                                                       threshold_a=2)
-    base64_images = [get_base64_image(path) for path in black_image_paths]
-    return controlnet_image_preprocessor(root_path, batch_id, "invert", base64_images)
+    base64_images2 = [get_base64_image(path) for path in black_image_paths]
+    for path in black_image_paths:
+        delete_file(path)
+    return controlnet_image_preprocessor(root_path, batch_id, "invert", base64_images2)

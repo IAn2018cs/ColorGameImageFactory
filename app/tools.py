@@ -50,6 +50,13 @@ def create_path(path):
         os.makedirs(path)
 
 
+def delete_file(path):
+    try:
+        os.remove(path)
+    except:
+        pass
+
+
 def get_timestamp() -> int:
     """
     获取毫秒时间戳
