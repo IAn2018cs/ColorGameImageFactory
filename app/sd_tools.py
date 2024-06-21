@@ -4,7 +4,9 @@ import os
 import requests
 
 import app.config
+from app.tools import convert2rgb_image
 from app.tools import create_path
+from app.tools import get_base64_image
 from app.tools import get_column_data
 from app.tools import get_timestamp
 from app.tools import save_base64_image
@@ -81,5 +83,46 @@ def generate_image_by_sd(root_path: str, batch_id: str,
             files.append(path)
         return files
     except Exception as e:
-        print(f"generate_by_openai error: {e}")
+        print(f"generate_image_by_sd error: {e}")
         return None
+
+
+def controlnet_image_preprocessor(root_path: str, batch_id: str, preprocessor: str,
+                                  input_images, processor_res=None, threshold_a=None, threshold_b=None):
+    try:
+        output_path = f'{root_path}/{batch_id}'
+        create_path(output_path)
+
+        url = f'{app.config.api_sd_host}/controlnet/detect'
+        data = {
+            "controlnet_module": preprocessor,
+            "controlnet_input_images": input_images
+        }
+        if processor_res:
+            data["controlnet_processor_res"] = processor_res
+        if threshold_a:
+            data["controlnet_threshold_a"] = threshold_a
+        if threshold_b:
+            data["controlnet_threshold_b"] = threshold_b
+        response = requests.post(url, json=data)
+        if not response.ok:
+            raise Exception(response.text)
+        print(response.json()['info'])
+        images = response.json()['images']
+        files = []
+        for image in images:
+            path = f'{output_path}/{get_timestamp()}.png'
+            save_base64_image(path, image)
+            files.append(path)
+        return files
+    except Exception as e:
+        print(f"controlnet_image_preprocessor error: {e}")
+        return None
+
+
+def convert_image_line_art(root_path: str, batch_id: str, image_paths: list[str]):
+    base64_images = [get_base64_image(convert2rgb_image(path)) for path in image_paths]
+    black_image_paths = controlnet_image_preprocessor(root_path, batch_id, "softedge_anyline", base64_images,
+                                                      threshold_a=2)
+    base64_images = [get_base64_image(path) for path in black_image_paths]
+    return controlnet_image_preprocessor(root_path, batch_id, "invert", base64_images)

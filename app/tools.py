@@ -9,6 +9,8 @@ import time
 from os import PathLike
 from typing import AnyStr
 
+from PIL import Image
+
 
 def resolve_relative_path(file: PathLike[AnyStr], path: str) -> str:
     return os.path.abspath(os.path.join(os.path.dirname(file), path))
@@ -67,7 +69,61 @@ def save_base64_image(path: str, b64):
         f.write(base64.b64decode(b64))
 
 
+def get_base64_image(path) -> str:
+    with open(path, 'rb') as f:
+        image_data = f.read()
+        base64_data = base64.b64encode(image_data)  # base64编码
+        return base64_data.decode('utf-8')
+
+
+def is_rgb_image(path) -> bool:
+    image = Image.open(path)
+    bands = image.getbands()
+    is_rgb = bands == ("R", "G", "B")
+    image.close()
+    return is_rgb
+
+
+def convert2rgb_image(path) -> str:
+    if is_rgb_image(path):
+        return path
+    dir_path = os.path.dirname(path)
+    file_name_split = os.path.split(path)[-1].split('.')
+    name = file_name_split[0]
+    file_suffix = file_name_split[-1]
+    new_file_path = f'{dir_path}/{name}_rgb.{file_suffix}'
+    im = Image.open(path).convert('RGB')
+    im.save(new_file_path)
+    im.close()
+    return new_file_path
+
+
 def zip_dir(dir_path, out_name, output_path):
     zip_file = shutil.make_archive(out_name, format='zip', root_dir=dir_path)
     shutil.move(zip_file, output_path)
     return f'{output_path}/{out_name}.zip'
+
+
+def split_list_with_min_length(original_list: list, min_length: int) -> list[list]:
+    if min_length <= 0:
+        raise "Error: Minimum length must be a positive number."
+
+    length = len(original_list)
+
+    # Calculate the number of sublists that can be created
+    num_sublists = (length + min_length - 1) // min_length  # Use ceiling division
+
+    # Initialize the starting index and result list
+    start = 0
+    result = []
+
+    for i in range(num_sublists):
+        # For the last sublist, include all remaining elements
+        if i == num_sublists - 1:
+            result.append(original_list[start:])
+        else:
+            # Append elements to each of the other sublists
+            result.append(original_list[start:start + min_length])
+            start += min_length
+
+    return result

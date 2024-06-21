@@ -4,6 +4,7 @@ import gradio as gr
 
 import app.config
 from app.prompt_factory import create_sd_prompts
+from app.sd_tools import convert_image_line_art
 from app.sd_tools import generate_image_by_sd
 from app.sd_tools import get_loras
 from app.sd_tools import get_models
@@ -11,6 +12,7 @@ from app.sd_tools import get_styles
 from app.tools import generate_random_id
 from app.tools import read_file_to_list_of_tuples
 from app.tools import resolve_relative_path
+from app.tools import split_list_with_min_length
 from app.tools import zip_dir
 
 sampling_method = [
@@ -84,7 +86,17 @@ def start_gan(category, image_count, model, lora, weights, trigger, negative, st
 
     zip_file = zip_dir(f'{root_path}/{batch_id}', batch_id, root_path)
 
-    return result, gr.DownloadButton(value=zip_file, visible=True)
+    line_art_result = []
+    line_art_batch_id = generate_random_id(16)
+    split_list = split_list_with_min_length(result, 5)
+    for image_paths in split_list:
+        split_result = convert_image_line_art(root_path, line_art_batch_id, image_paths)
+        line_art_result.extend(split_result)
+
+    line_art_zip_file = zip_dir(f'{root_path}/{line_art_batch_id}', line_art_batch_id, root_path)
+
+    return (result, line_art_result,
+            gr.DownloadButton(value=zip_file, visible=True), gr.DownloadButton(value=line_art_zip_file, visible=True))
 
 
 def generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_path, sampling, schedule, step,
@@ -92,8 +104,9 @@ def generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_
     lora = str(lora).strip()
     trigger = str(trigger).strip()
     result = []
-    print(lora)
-    print(trigger)
+    print(f"lora: {lora}")
+    print(f"trigger prompt: {trigger}")
+
     for prompt in prompts:
         new_prompt = ""
         if lora != "" and lora != "None":
@@ -197,11 +210,18 @@ def build_webui():
             step=0.5,
             label="CFG Scale"
         )
-        gallery = gr.Gallery(
-            label="Generated images", show_label=False, elem_id="gallery", format="png",
-            columns=4, rows=1, object_fit="contain", height="auto")
+        with gr.Row():
+            with gr.Column():
+                gallery = gr.Gallery(
+                    label="原图", format="png",
+                    columns=4, rows=1, object_fit="contain")
+                download_all_button = gr.DownloadButton("下载所有原图", visible=False)
+            with gr.Column():
+                line_art_gallery = gr.Gallery(
+                    label="线稿图", format="png",
+                    columns=4, rows=1, object_fit="contain")
+                download_line_art_button = gr.DownloadButton("下载所有线稿图", visible=False)
 
-        download_all_button = gr.DownloadButton("下载所有图片", visible=False)
         btn = gr.Button("开始批量生成", variant="primary")
         btn.click(
             fn=start_gan,
@@ -211,7 +231,9 @@ def build_webui():
             ],
             outputs=[
                 gallery,
-                download_all_button
+                line_art_gallery,
+                download_all_button,
+                download_line_art_button
             ],
             scroll_to_output=True
         )
