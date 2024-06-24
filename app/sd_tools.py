@@ -1,9 +1,12 @@
 # coding=utf-8
 
+import shutil
+
 import requests
 
 import app.config
 from app.tools import convert2rgb_image
+from app.tools import convert2svg_image
 from app.tools import create_path
 from app.tools import delete_file
 from app.tools import generate_random_id
@@ -12,7 +15,6 @@ from app.tools import get_base64_image
 from app.tools import get_column_data
 from app.tools import get_timestamp
 from app.tools import save_base64_image
-import shutil
 
 
 def get_loras() -> list[str]:
@@ -125,11 +127,20 @@ def controlnet_image_preprocessor(root_path: str, batch_id: str, preprocessor: s
         return None
 
 
-def convert_image_line_art(root_path: str, batch_id: str, image_paths: list[str]):
+def convert_image_line_art(root_path: str, batch_id: str, image_paths: list[str], to_svg: bool = False):
     base64_images = [get_base64_image(convert2rgb_image(path)) for path in image_paths]
     black_image_paths = controlnet_image_preprocessor(root_path, batch_id, "softedge_anyline", base64_images,
                                                       threshold_a=2)
     base64_images2 = [get_base64_image(path) for path in black_image_paths]
     for path in black_image_paths:
         delete_file(path)
-    return controlnet_image_preprocessor(root_path, batch_id, "invert", base64_images2)
+
+    line_image_paths = controlnet_image_preprocessor(root_path, batch_id, "invert", base64_images2)
+
+    if not to_svg:
+        return line_image_paths
+    result = []
+    for path in line_image_paths:
+        new_path = convert2svg_image(path)
+        result.append(new_path)
+    return result

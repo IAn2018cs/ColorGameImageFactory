@@ -6,9 +6,9 @@ import app.config
 from app.prompt_factory import create_sd_prompts
 from app.sd_tools import convert_image_line_art
 from app.sd_tools import generate_image_by_sd
-from app.sd_tools import get_train_loras
 from app.sd_tools import get_models
 from app.sd_tools import get_styles
+from app.sd_tools import get_train_loras
 from app.tools import generate_random_id
 from app.tools import get_all_file_path
 from app.tools import get_current_datatime
@@ -92,7 +92,7 @@ def start_gan(category, image_count, model, lora, weights, trigger, negative, st
     line_art_batch_id = generate_random_id(16)
     split_list = split_list_with_min_length(result, 5)
     for image_paths in split_list:
-        split_result = convert_image_line_art(root_path, line_art_batch_id, image_paths)
+        split_result = convert_image_line_art(root_path, line_art_batch_id, image_paths, to_svg=True)
         line_art_result.extend(split_result)
 
     line_art_zip_file = zip_dir(f'{root_path}/{line_art_batch_id}', line_art_batch_id, root_path)
@@ -135,7 +135,7 @@ def start_convert_line_art(source_path, target_path):
 
     split_list = split_list_with_min_length(files, 5)
     for image_paths in split_list:
-        split_result = convert_image_line_art(root_path, batch_id, image_paths)
+        split_result = convert_image_line_art(root_path, batch_id, image_paths, to_svg=True)
         line_art_result.extend(split_result)
 
     line_art_zip_file = zip_dir(f'{root_path}/{batch_id}', batch_id, root_path)
@@ -146,7 +146,15 @@ def start_convert_line_art(source_path, target_path):
 
 def build_webui():
     all_category = get_all_category()
-    with gr.Blocks() as webui:
+    custom_css = """
+.dark .thumbnail-item {
+    background-color: white !important;
+}
+.dark .image-button {
+    background-color: white !important;
+}
+"""
+    with gr.Blocks(css=custom_css) as webui:
         gr.Markdown("# 填色游戏图片工厂")
         gr.Markdown(
             "## 通过 AI 生成相关提示词，再用 Stable Diffusion 批量生成填色游戏中的图片")
@@ -240,7 +248,7 @@ def build_webui():
                     download_all_button = gr.DownloadButton("下载所有原图", visible=False)
                 with gr.Column():
                     line_art_gallery = gr.Gallery(
-                        label="线稿图", format="png",
+                        label="线稿图", format="svg",
                         columns=4, rows=1, object_fit="contain")
                     download_line_art_button = gr.DownloadButton("下载所有线稿图", visible=False)
 
@@ -271,7 +279,7 @@ def build_webui():
                 )
             result_path = gr.Textbox(label="已经导出到下面路径中", interactive=False, visible=False)
             line_gallery = gr.Gallery(
-                show_label=False, format="png",
+                show_label=False, format="svg",
                 columns=4, rows=1, object_fit="contain")
             download_line_button = gr.DownloadButton("下载所有图", visible=False)
             line_btn = gr.Button("开始批量转换", variant="primary")
