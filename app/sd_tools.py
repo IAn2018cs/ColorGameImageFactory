@@ -130,6 +130,7 @@ def controlnet_image_preprocessor(root_path: str, batch_id: str, preprocessor: s
 def convert_image_line_art(root_path: str, batch_id: str, image_paths: list[str], to_svg: bool = False):
     base64_images = [get_base64_image(convert2rgb_image(path)) for path in image_paths]
     black_image_paths = controlnet_image_preprocessor(root_path, batch_id, "softedge_anyline", base64_images,
+                                                      processor_res=1280,
                                                       threshold_a=2)
     base64_images2 = [get_base64_image(path) for path in black_image_paths]
     for path in black_image_paths:
