@@ -2,3 +2,9 @@ gradio
 requests
 pillow
 opencv-python
+scikit-learn
+numpy
+scipy
+pandas
+svgwrite
+vtracer

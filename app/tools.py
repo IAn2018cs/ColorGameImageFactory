@@ -237,3 +237,7 @@ def convert2svg_image(path):
     delete_file(path)
 
     return svg_output_path
+
+
+if __name__ == '__main__':
+    convert2svg_image('../test/new_test.png')

@@ -56,7 +56,8 @@ def generate_image_by_sd(root_path: str, batch_id: str,
                          steps: int, cfg: float,
                          sampler_name: str, scheduler: str,
                          width: int, height: int,
-                         styles: list[str] = [], n_iter: int = 1):
+                         styles: list[str] = None, n_iter: int = 1,
+                         alwayson_scripts: dict = None):
     try:
         output_path = f'{root_path}/{batch_id}'
         create_path(output_path)
@@ -69,7 +70,6 @@ def generate_image_by_sd(root_path: str, batch_id: str,
             "cfg_scale": cfg,
             "width": width,
             "height": height,
-            "styles": styles,
             "batch_size": 1,
             "n_iter": n_iter,
             "seed": -1,
@@ -80,6 +80,10 @@ def generate_image_by_sd(root_path: str, batch_id: str,
             "sampler_name": sampler_name,
             "scheduler": scheduler,
         }
+        if styles:
+            data['styles'] = styles
+        if alwayson_scripts:
+            data['alwayson_scripts'] = alwayson_scripts
         response = requests.post(url, json=data)
         print(response.json()['info'])
         images = response.json()['images']
@@ -132,6 +136,25 @@ def convert_image_line_art(root_path: str, batch_id: str, image_paths: list[str]
     black_image_paths = controlnet_image_preprocessor(root_path, batch_id, "softedge_anyline", base64_images,
                                                       processor_res=1280,
                                                       threshold_a=2)
+    base64_images2 = [get_base64_image(path) for path in black_image_paths]
+    for path in black_image_paths:
+        delete_file(path)
+
+    line_image_paths = controlnet_image_preprocessor(root_path, batch_id, "invert", base64_images2)
+
+    if not to_svg:
+        return line_image_paths
+    result = []
+    for path in line_image_paths:
+        new_path = convert2svg_image(path)
+        result.append(new_path)
+    return result
+
+
+def convert_image_line_art_anime_denoise(root_path: str, batch_id: str, image_paths: list[str], to_svg: bool = False):
+    base64_images = [get_base64_image(path) for path in image_paths]
+    black_image_paths = controlnet_image_preprocessor(root_path, batch_id, "lineart_anime_denoise", base64_images,
+                                                      processor_res=512)
     base64_images2 = [get_base64_image(path) for path in black_image_paths]
     for path in black_image_paths:
         delete_file(path)
