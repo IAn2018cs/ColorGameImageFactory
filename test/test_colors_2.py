@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 # 读取图像
-image = cv2.imread('../1/1719215533387_gqcJ.png', 0)  # 以灰度模式读取
+image = cv2.imread('data/00087-2910593776.png', 0)  # 以灰度模式读取
 
 # 应用高斯模糊
 blurred = cv2.GaussianBlur(image, (5, 5), 0)

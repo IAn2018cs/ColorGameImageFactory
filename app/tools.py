@@ -221,7 +221,7 @@ def enhance_line_drawing(input_path, output_path, blur_kernel=(3, 3), threshold_
     print(f"处理完成,结果已保存至 {output_path}")
 
 
-def convert2svg_image(path):
+def convert2svg_image(path, after_delete: bool = True):
     dir_path = os.path.dirname(path)
     file_name_split = os.path.split(path)[-1].split('.')
     name = file_name_split[0]
@@ -234,10 +234,7 @@ def convert2svg_image(path):
     os.system(f'potrace {pbm_file_path} -s -o {svg_output_path}')
 
     delete_file(pbm_file_path)
-    delete_file(path)
+    if after_delete:
+        delete_file(path)
 
     return svg_output_path
-
-
-if __name__ == '__main__':
-    convert2svg_image('../test/new_test.png')

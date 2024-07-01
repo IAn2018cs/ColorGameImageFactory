@@ -83,7 +83,7 @@ def generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_
 
 
 def build_batch_generate_ui():
-    with gr.Tab("批量生图测试"):
+    with gr.TabItem("批量生图测试", id=0):
         category = gr.Dropdown(
             choices=all_category,
             value=all_category[0],

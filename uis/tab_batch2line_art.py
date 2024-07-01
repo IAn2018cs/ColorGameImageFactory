@@ -29,7 +29,7 @@ def start_convert_line_art(source_path, target_path):
 
 
 def build_batch2line_art_ui():
-    with gr.Tab("批量转线稿图"):
+    with gr.TabItem("批量转线稿图", id=1):
         with gr.Row():
             source_path = gr.Textbox(
                 placeholder="请填写服务器上的绝对路径（末尾不要带 / ）",

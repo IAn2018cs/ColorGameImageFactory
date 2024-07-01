@@ -1,13 +1,11 @@
 # coding=utf-8
 
+import os
 
 import cv2
 import numpy as np
 import svgwrite
-import os
-import subprocess
 from sklearn.cluster import KMeans
-import xml.etree.ElementTree as ET
 
 
 def color_quantization(path, num_colors):
