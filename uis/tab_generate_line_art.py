@@ -148,6 +148,15 @@ def invert_black_image2svg(root_path, batch_id, images):
     return result
 
 
+def convert2svg(images):
+    result = []
+    for info in images:
+        path = info['image']
+        new_path = convert2svg_image(path, after_delete=True)
+        result.append(new_path)
+    return result
+
+
 def generate_quantization_images(quantization_batch_id, colorful_images, num_colors):
     root_path = resolve_relative_path(__file__, '../output')
     output_dir = f'{root_path}/{quantization_batch_id}'
@@ -182,10 +191,9 @@ def start_gan_line_art(category, image_count, num_colors,
                                                    color_sampling, color_schedule, color_step, color_cfg)
         colorful_zip_file = zip_dir(f'{root_path}/{colorful_batch_id}', colorful_batch_id, root_path)
 
-        # 3. 将第 1 步中的预处理图 invert 颜色反转，转成 svg 图 -> 线稿图 保存一个结果
-        svg_batch_id = generate_random_id(16)
-        svg_images = invert_black_image2svg(root_path, svg_batch_id, black_base64_images)
-        svg_zip_file = zip_dir(f'{root_path}/{svg_batch_id}', svg_batch_id, root_path)
+        # 3. 将第 1 步中的图转成 svg 图 -> 线稿图 保存一个结果
+        svg_images = convert2svg(line_art_images)
+        svg_zip_file = zip_dir(f'{root_path}/{line_art_batch_id}', line_art_batch_id, root_path)
 
         # 4. 上色图颜色聚类 -> 聚类图 保存一个结果
         quantization_batch_id = generate_random_id(16)

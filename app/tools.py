@@ -231,7 +231,7 @@ def convert2svg_image(path, after_delete: bool = True):
     im.close()
 
     svg_output_path = f'{dir_path}/{name}.svg'
-    os.system(f'potrace {pbm_file_path} -s -o {svg_output_path}')
+    os.system(f'potrace {pbm_file_path} -k 0.9 -s -o {svg_output_path}')
 
     delete_file(pbm_file_path)
     if after_delete:
