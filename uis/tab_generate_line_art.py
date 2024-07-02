@@ -219,7 +219,7 @@ def build_generate_line_art_ui():
                 with gr.Row():
                     with gr.Column():
                         line_model = gr.Dropdown(
-                            value="crystalClearXL_ccxl",
+                            value=app.config.default_line_sd_model,
                             choices=get_models(),
                             multiselect=False,
                             label="生成线稿图 SD 模型"
@@ -229,7 +229,7 @@ def build_generate_line_art_ui():
                     with gr.Row(equal_height=False):
                         with gr.Column():
                             line_lora = gr.Dropdown(
-                                value="Coloring_book_-_LineArt",
+                                value=app.config.default_line_sd_lora,
                                 choices=get_train_loras(),
                                 multiselect=False,
                                 label="生成线稿图 SD Lora"
@@ -237,7 +237,7 @@ def build_generate_line_art_ui():
                             line_refresh_lora_button = gr.Button("🔄", size="sm")
                             line_refresh_lora_button.click(refresh_loras, line_lora, line_lora)
                 line_weight = gr.Slider(
-                    value=0.7,
+                    value=app.config.default_line_sd_lora_weight,
                     minimum=0,
                     maximum=2,
                     step=0.05,
@@ -247,36 +247,36 @@ def build_generate_line_art_ui():
             with gr.Row():
                 line_trigger = gr.Textbox(
                     placeholder="生成线稿图 Lora 的触发提示词（可以为空）",
-                    value="black and white, line art, white background, thick outlines, coloring drawing of",
+                    value=app.config.default_line_sd_prompt,
                     label="生成线稿图 Trigger prompt",
                 )
                 line_negative = gr.Textbox(
                     placeholder="生成线稿图 反向提示词（可以为空）",
-                    value="colorful, colors",
+                    value=app.config.default_line_sd_negative,
                     label="生成线稿图 Negative prompt"
                 )
             with gr.Row():
                 line_sampling = gr.Dropdown(
                     choices=sampling_method,
-                    value="DPM++ 2M SDE",
+                    value=app.config.default_line_sd_sampling,
                     multiselect=False,
                     label="生成线稿图 Sampling method"
                 )
                 line_schedule = gr.Dropdown(
                     choices=schedule_type,
-                    value="Exponential",
+                    value=app.config.default_line_sd_schedule,
                     multiselect=False,
                     label="生成线稿图 Schedule type"
                 )
                 line_step = gr.Slider(
-                    value=30,
+                    value=app.config.default_line_sd_steps,
                     minimum=1,
                     maximum=150,
                     step=1,
                     label="生成线稿图 Sampling steps"
                 )
                 line_cfg = gr.Slider(
-                    value=7,
+                    value=app.config.default_line_sd_cfg,
                     minimum=1,
                     maximum=30,
                     step=0.5,
@@ -288,7 +288,7 @@ def build_generate_line_art_ui():
                 with gr.Row():
                     with gr.Column():
                         color_model = gr.Dropdown(
-                            value=app.config.sd_default_model,
+                            value=app.config.default_color_sd_model,
                             choices=get_models(),
                             multiselect=False,
                             label="线稿图上色 SD 模型"
@@ -298,6 +298,7 @@ def build_generate_line_art_ui():
                     with gr.Row(equal_height=False):
                         with gr.Column():
                             color_lora = gr.Dropdown(
+                                value=app.config.default_color_sd_lora,
                                 choices=get_train_loras(),
                                 multiselect=False,
                                 label="线稿图上色 SD Lora"
@@ -305,7 +306,7 @@ def build_generate_line_art_ui():
                             color_refresh_lora_button = gr.Button("🔄", size="sm")
                             color_refresh_lora_button.click(refresh_loras, color_lora, color_lora)
                 color_weight = gr.Slider(
-                    value=1,
+                    value=app.config.default_color_sd_lora_weight,
                     minimum=0,
                     maximum=2,
                     step=0.05,
@@ -314,36 +315,37 @@ def build_generate_line_art_ui():
 
             with gr.Row():
                 color_trigger = gr.Textbox(
+                    value=app.config.default_color_sd_prompt,
                     placeholder="线稿图上色 Lora 的触发提示词（可以为空）",
                     label="线稿图上色 Trigger prompt",
                 )
                 color_negative = gr.Textbox(
                     placeholder="线稿图上色 反向提示词（可以为空）",
-                    value="text, watermark, negativeXL_D",
+                    value=app.config.default_color_sd_negative,
                     label="线稿图上色 Negative prompt"
                 )
             with gr.Row():
                 color_sampling = gr.Dropdown(
                     choices=sampling_method,
-                    value=sampling_method[0],
+                    value=app.config.default_color_sd_sampling,
                     multiselect=False,
                     label="线稿图上色 Sampling method"
                 )
                 color_schedule = gr.Dropdown(
                     choices=schedule_type,
-                    value=schedule_type[0],
+                    value=app.config.default_color_sd_schedule,
                     multiselect=False,
                     label="线稿图上色 Schedule type"
                 )
                 color_step = gr.Slider(
-                    value=20,
+                    value=app.config.default_color_sd_steps,
                     minimum=1,
                     maximum=150,
                     step=1,
                     label="线稿图上色 Sampling steps"
                 )
                 color_cfg = gr.Slider(
-                    value=7,
+                    value=app.config.default_color_sd_cfg,
                     minimum=1,
                     maximum=30,
                     step=0.5,

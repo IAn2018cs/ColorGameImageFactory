@@ -22,8 +22,9 @@ def upload_file(file, colors_dw):
         zero_colors[c] = "#ffffff"
     new_path = update_svg_colors(file, zero_colors)
     print(new_path)
-    return (gr.UploadButton(label="更换文件"),
-            gr.update(colors_dw, choices=colors, visible=True), gr.Image(value=new_path, type="filepath", visible=True))
+    return (gr.UploadButton(label="更换文件"), gr.Button(visible=True),
+            gr.Image(value=new_path, type="filepath", visible=True),
+            gr.update(colors_dw, value=[], choices=colors, visible=True))
 
 
 def start_change_color(colors):
@@ -41,17 +42,24 @@ def start_change_color(colors):
     return gr.Image(value=new_path, type="filepath")
 
 
+def reset_colors(colors_dw):
+    return gr.update(colors_dw, value=[])
+
+
 def build_try_color_game_ui():
     with gr.TabItem("尝试填色游戏", id=3):
         with gr.Row():
             image = gr.Image(format="svg", visible=False, width=512, show_label=False)
-            colors = gr.CheckboxGroup(
-                visible=False,
-                label="请选择要填色的色块号"
-            )
-            colors.change(start_change_color, colors, image)
+            with gr.Column():
+                colors = gr.CheckboxGroup(
+                    visible=False,
+                    label="请选择要填色的色块号"
+                )
+                colors.change(start_change_color, colors, image)
+                reset_bt = gr.Button("重置色块", visible=False)
+                reset_bt.click(reset_colors, colors, colors)
         upload_button = gr.UploadButton(
             label="上传 svg",
             file_types=['.svg']
         )
-        upload_button.upload(upload_file, [upload_button, colors], [upload_button, colors, image])
+        upload_button.upload(upload_file, [upload_button, colors], [upload_button, reset_bt, image, colors])

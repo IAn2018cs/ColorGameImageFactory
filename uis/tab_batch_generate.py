@@ -101,7 +101,7 @@ def build_batch_generate_ui():
         with gr.Row():
             with gr.Column():
                 model = gr.Dropdown(
-                    value=app.config.sd_default_model,
+                    value=app.config.default_color_sd_model,
                     choices=get_models(),
                     multiselect=False,
                     label="Stable Diffusion checkpoint"
@@ -111,6 +111,7 @@ def build_batch_generate_ui():
             with gr.Row(equal_height=False):
                 with gr.Column():
                     lora = gr.Dropdown(
+                        value=app.config.default_color_sd_lora,
                         choices=get_train_loras(),
                         multiselect=False,
                         label="Lora"
@@ -118,19 +119,20 @@ def build_batch_generate_ui():
                     refresh_lora_button = gr.Button("🔄", size="sm")
                     refresh_lora_button.click(refresh_loras, lora, lora)
                 weights = gr.Slider(
-                    value=1,
+                    value=app.config.default_color_sd_lora_weight,
                     minimum=0,
                     maximum=2,
                     step=0.05,
                     label="Lora weights"
                 )
         trigger = gr.Textbox(
+            value=app.config.default_color_sd_prompt,
             placeholder="Lora 的触发提示词（可以为空）",
             label="Trigger prompt",
         )
         negative = gr.Textbox(
             placeholder="反向提示词（可以为空）",
-            value="text, watermark, negativeXL_D",
+            value=app.config.default_color_sd_negative,
             label="Negative prompt"
         )
         styles = gr.Dropdown(
@@ -141,25 +143,25 @@ def build_batch_generate_ui():
         with gr.Row():
             sampling = gr.Dropdown(
                 choices=sampling_method,
-                value=sampling_method[0],
+                value=app.config.default_color_sd_sampling,
                 multiselect=False,
                 label="Sampling method"
             )
             schedule = gr.Dropdown(
                 choices=schedule_type,
-                value=schedule_type[0],
+                value=app.config.default_color_sd_schedule,
                 multiselect=False,
                 label="Schedule type"
             )
         step = gr.Slider(
-            value=20,
+            value=app.config.default_color_sd_steps,
             minimum=1,
             maximum=150,
             step=1,
             label="Sampling steps"
         )
         cfg = gr.Slider(
-            value=7,
+            value=app.config.default_color_sd_cfg,
             minimum=1,
             maximum=30,
             step=0.5,
