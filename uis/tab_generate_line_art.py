@@ -163,39 +163,43 @@ def start_gan_line_art(category, image_count, num_colors,
                        line_step, line_cfg,
                        color_model, color_lora, color_weight, color_trigger, color_negative, color_sampling,
                        color_schedule, color_step, color_cfg):
-    root_path = resolve_relative_path(__file__, '../output')
-    # 0. 根据类型生成一批提示词 & 生成线稿图
-    line_art_batch_id = generate_random_id(16)
-    line_art_images = generate_prompt_and_line_art(root_path, line_art_batch_id, category, image_count, line_model,
-                                                   line_lora, line_weight, line_trigger, line_negative, line_sampling,
-                                                   line_schedule, line_step, line_cfg)
+    try:
+        root_path = resolve_relative_path(__file__, '../output')
+        # 0. 根据类型生成一批提示词 & 生成线稿图
+        line_art_batch_id = generate_random_id(16)
+        line_art_images = generate_prompt_and_line_art(root_path, line_art_batch_id, category, image_count, line_model,
+                                                       line_lora, line_weight, line_trigger, line_negative,
+                                                       line_sampling,
+                                                       line_schedule, line_step, line_cfg)
 
-    # 1. lineart_anime_denoise 预处理成 黑底白线图
-    black_base64_images = convert_line_art2black_images(root_path, line_art_batch_id, line_art_images)
+        # 1. lineart_anime_denoise 预处理成 黑底白线图
+        black_base64_images = convert_line_art2black_images(root_path, line_art_batch_id, line_art_images)
 
-    # 2. 通过 ControlNet 生成上色图 -> 原图 保存一个结果
-    colorful_batch_id = generate_random_id(16)
-    colorful_images = generate_colorful_images(root_path, colorful_batch_id, black_base64_images,
-                                               color_model, color_lora, color_weight, color_trigger, color_negative,
-                                               color_sampling, color_schedule, color_step, color_cfg)
-    colorful_zip_file = zip_dir(f'{root_path}/{colorful_batch_id}', colorful_batch_id, root_path)
+        # 2. 通过 ControlNet 生成上色图 -> 原图 保存一个结果
+        colorful_batch_id = generate_random_id(16)
+        colorful_images = generate_colorful_images(root_path, colorful_batch_id, black_base64_images,
+                                                   color_model, color_lora, color_weight, color_trigger, color_negative,
+                                                   color_sampling, color_schedule, color_step, color_cfg)
+        colorful_zip_file = zip_dir(f'{root_path}/{colorful_batch_id}', colorful_batch_id, root_path)
 
-    # 3. 将第 1 步中的预处理图 invert 颜色反转，转成 svg 图 -> 线稿图 保存一个结果
-    svg_batch_id = generate_random_id(16)
-    svg_images = invert_black_image2svg(root_path, svg_batch_id, black_base64_images)
-    svg_zip_file = zip_dir(f'{root_path}/{svg_batch_id}', svg_batch_id, root_path)
+        # 3. 将第 1 步中的预处理图 invert 颜色反转，转成 svg 图 -> 线稿图 保存一个结果
+        svg_batch_id = generate_random_id(16)
+        svg_images = invert_black_image2svg(root_path, svg_batch_id, black_base64_images)
+        svg_zip_file = zip_dir(f'{root_path}/{svg_batch_id}', svg_batch_id, root_path)
 
-    # 4. 上色图颜色聚类 -> 聚类图 保存一个结果
-    quantization_batch_id = generate_random_id(16)
-    quantization_images = generate_quantization_images(quantization_batch_id, colorful_images, num_colors)
-    quantization_zip_file = zip_dir(f'{root_path}/{quantization_batch_id}', quantization_batch_id, root_path)
+        # 4. 上色图颜色聚类 -> 聚类图 保存一个结果
+        quantization_batch_id = generate_random_id(16)
+        quantization_images = generate_quantization_images(quantization_batch_id, colorful_images, num_colors)
+        quantization_zip_file = zip_dir(f'{root_path}/{quantization_batch_id}', quantization_batch_id, root_path)
 
-    return (
-        colorful_images, svg_images, quantization_images,
-        gr.DownloadButton(value=colorful_zip_file, visible=True),
-        gr.DownloadButton(value=svg_zip_file, visible=True),
-        gr.DownloadButton(value=quantization_zip_file, visible=True)
-    )
+        return (
+            colorful_images, svg_images, quantization_images,
+            gr.DownloadButton(value=colorful_zip_file, visible=True),
+            gr.DownloadButton(value=svg_zip_file, visible=True),
+            gr.DownloadButton(value=quantization_zip_file, visible=True)
+        )
+    except Exception as e:
+        raise gr.Error(f"发生错误：{e}，请重试")
 
 
 def build_generate_line_art_ui():
@@ -371,7 +375,7 @@ def build_generate_line_art_ui():
         num_colors = gr.Slider(
             value=30,
             minimum=8,
-            maximum=50,
+            maximum=200,
             step=1,
             label="聚类颜色数量"
         )

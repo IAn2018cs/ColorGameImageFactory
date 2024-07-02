@@ -21,41 +21,45 @@ from uis.tools import schedule_type
 
 
 def start_gan(category, image_count, model, lora, weights, trigger, negative, styles, sampling, schedule, step, cfg):
-    prompt_count = min(6, image_count)
-    n_iter = max(int(image_count / prompt_count), 1)
-    prompts = create_sd_prompts(category, prompt_count)
+    try:
+        prompt_count = min(6, image_count)
+        n_iter = max(int(image_count / prompt_count), 1)
+        prompts = create_sd_prompts(category, prompt_count)
 
-    result = []
-    root_path = resolve_relative_path(__file__, '../output')
-    batch_id = generate_random_id(16)
-    result.extend(
-        generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_path, sampling, schedule, step,
-                        styles, trigger, weights)
-    )
+        result = []
+        root_path = resolve_relative_path(__file__, '../output')
+        batch_id = generate_random_id(16)
+        result.extend(
+            generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_path, sampling, schedule, step,
+                            styles, trigger, weights)
+        )
 
-    if image_count > prompt_count:
-        last = image_count % prompt_count
-        if last > 0:
-            prompts = create_sd_prompts(category, last)
-            result.extend(
-                generate_images(batch_id, cfg, lora, model, 1, negative, prompts, root_path, sampling, schedule,
-                                step,
-                                styles, trigger, weights)
-            )
+        if image_count > prompt_count:
+            last = image_count % prompt_count
+            if last > 0:
+                prompts = create_sd_prompts(category, last)
+                result.extend(
+                    generate_images(batch_id, cfg, lora, model, 1, negative, prompts, root_path, sampling, schedule,
+                                    step,
+                                    styles, trigger, weights)
+                )
 
-    zip_file = zip_dir(f'{root_path}/{batch_id}', batch_id, root_path)
+        zip_file = zip_dir(f'{root_path}/{batch_id}', batch_id, root_path)
 
-    line_art_result = []
-    line_art_batch_id = generate_random_id(16)
-    split_list = split_list_with_min_length(result, 5)
-    for image_paths in split_list:
-        split_result = convert_image_line_art(root_path, line_art_batch_id, image_paths, to_svg=True)
-        line_art_result.extend(split_result)
+        line_art_result = []
+        line_art_batch_id = generate_random_id(16)
+        split_list = split_list_with_min_length(result, 5)
+        for image_paths in split_list:
+            split_result = convert_image_line_art(root_path, line_art_batch_id, image_paths, to_svg=True)
+            line_art_result.extend(split_result)
 
-    line_art_zip_file = zip_dir(f'{root_path}/{line_art_batch_id}', line_art_batch_id, root_path)
+        line_art_zip_file = zip_dir(f'{root_path}/{line_art_batch_id}', line_art_batch_id, root_path)
 
-    return (result, line_art_result,
-            gr.DownloadButton(value=zip_file, visible=True), gr.DownloadButton(value=line_art_zip_file, visible=True))
+        return (result, line_art_result,
+                gr.DownloadButton(value=zip_file, visible=True),
+                gr.DownloadButton(value=line_art_zip_file, visible=True))
+    except Exception as e:
+        raise gr.Error(f"发生错误：{e}，请重试")
 
 
 def generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_path, sampling, schedule, step,
