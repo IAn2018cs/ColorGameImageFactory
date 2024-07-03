@@ -132,7 +132,8 @@ def generate_colorful_images(root_path, batch_id, images,
             }
         )
         # 去掉最后一张 ControlNet 预处理图
-        image.pop()
+        cn_im = image.pop()
+        delete_file(cn_im)
         result.extend(image)
     return result
 
