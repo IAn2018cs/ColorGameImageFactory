@@ -33,3 +33,4 @@ default_line_sd_sampling =
 default_line_sd_schedule =
 default_line_sd_steps =
 default_line_sd_cfg =
+gan_api_host =
