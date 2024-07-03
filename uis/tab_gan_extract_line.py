@@ -4,9 +4,9 @@ import shutil
 
 import gradio as gr
 
+from app.gen_tools import extract_line_by_gan
 from app.tools import convert2svg_image
 from app.tools import create_path
-from app.tools import extract_line_by_gan
 from app.tools import generate_random_id
 from app.tools import get_timestamp
 from app.tools import resolve_relative_path

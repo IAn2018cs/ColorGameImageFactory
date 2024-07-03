@@ -2,7 +2,7 @@
 import gradio as gr
 
 import app.config
-from app.colorful_svg import color_quantization
+from app.colorful_svg_v2 import color_quantization
 from app.gen_tools import extract_line_by_gan
 from app.prompt_factory import create_sd_prompts
 from app.sd_tools import controlnet_image_preprocessor
@@ -161,17 +161,17 @@ def convert2svg(batch_id, images_root_path):
     return result
 
 
-def generate_quantization_images(quantization_batch_id, colorful_images, num_colors):
+def generate_quantization_images(quantization_batch_id, colorful_images, line_svg_images, num_colors):
     root_path = resolve_relative_path(__file__, '../output')
     output_dir = f'{root_path}/{quantization_batch_id}'
     create_path(output_dir)
-    png_results = []
+
     svg_results = []
-    for colorful_image in colorful_images:
-        png_img, svg_img = color_quantization(colorful_image, output_dir, num_colors, save_png=True, add_label=False)
-        png_results.append(png_img)
+    for index, colorful_image in enumerate(colorful_images):
+        line_svg = line_svg_images[index]
+        svg_img = color_quantization(colorful_image, line_svg, output_dir, num_colors)
         svg_results.append(svg_img)
-    return png_results, svg_results
+    return svg_results
 
 
 def start_gan_line_art(category, image_count, num_colors,
@@ -205,14 +205,15 @@ def start_gan_line_art(category, image_count, num_colors,
         svg_images = convert2svg(gan_batch_id, f'{root_path}/{colorful_batch_id}/')
         svg_zip_file = zip_dir(f'{root_path}/{gan_batch_id}', gan_batch_id, root_path)
 
-        # 4. 上色图颜色聚类 -> 聚类图 保存一个结果
+        # 4. 转成 彩色 svg
         quantization_batch_id = generate_random_id(16)
-        quantization_images, quantization_svg_images = generate_quantization_images(quantization_batch_id,
-                                                                                    colorful_images, num_colors)
+        quantization_svg_images = generate_quantization_images(quantization_batch_id,
+                                                               colorful_images, svg_images,
+                                                               num_colors)
         quantization_zip_file = zip_dir(f'{root_path}/{quantization_batch_id}', quantization_batch_id, root_path)
 
         return (
-            line_art_paths, colorful_images, svg_images, quantization_images, quantization_svg_images,
+            line_art_paths, colorful_images, svg_images, quantization_svg_images,
             gr.DownloadButton(value=line_art_zip_file, visible=True),
             gr.DownloadButton(value=colorful_zip_file, visible=True),
             gr.DownloadButton(value=svg_zip_file, visible=True),
@@ -222,8 +223,8 @@ def start_gan_line_art(category, image_count, num_colors,
         raise gr.Error(f"发生错误：{e}，请重试")
 
 
-def build_generate_line_art_ui():
-    with gr.TabItem("线稿 + 上色 + 颜色聚类模式", id=2):
+def build_generate_line_art_v2_ui():
+    with gr.TabItem("线稿 + 上色 + 彩图SVG 模式", id=5):
         category = gr.Dropdown(
             choices=all_category,
             value=all_category[0],
@@ -377,12 +378,11 @@ def build_generate_line_art_ui():
                 )
         num_colors = gr.Slider(
             value=30,
-            minimum=8,
-            maximum=200,
+            minimum=10,
+            maximum=100,
             step=1,
-            label="聚类颜色数量"
+            label="合并相似颜色阈值"
         )
-
         with gr.Row():
             with gr.Column():
                 line_art_gallery = gr.Gallery(
@@ -399,15 +399,11 @@ def build_generate_line_art_ui():
                     label="GAN 模型提取线稿图", format="svg",
                     columns=2, rows=1, object_fit="contain")
                 download_gan_line_button = gr.DownloadButton("下载所有 GAN 提取的线稿图", visible=False)
-        with gr.Column():
             with gr.Row():
-                color_art_gallery = gr.Gallery(
-                    label="颜色聚类图", format="png",
-                    columns=2, rows=1, object_fit="contain")
                 color_art_svg_gallery = gr.Gallery(
-                    label="颜色聚类 svg 图", format="svg",
+                    label="最终 svg 图", format="svg",
                     columns=2, rows=1, object_fit="contain")
-            download_color_art_button = gr.DownloadButton("下载所有颜色聚类图", visible=False)
+                download_color_art_button = gr.DownloadButton("下载所有 svg 彩图", visible=False)
 
         btn = gr.Button("开始批量生成", variant="primary")
         btn.click(
@@ -420,11 +416,7 @@ def build_generate_line_art_ui():
                 color_step, color_cfg
             ],
             outputs=[
-                line_art_gallery,
-                gallery,
-                gan_line_gallery,
-                color_art_gallery,
-                color_art_svg_gallery,
+                line_art_gallery, gallery, gan_line_gallery, color_art_svg_gallery,
                 download_line_art_button,
                 download_all_button,
                 download_gan_line_button,

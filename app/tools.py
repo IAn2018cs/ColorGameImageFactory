@@ -11,10 +11,7 @@ from typing import AnyStr
 
 import cv2
 import numpy as np
-import requests
 from PIL import Image
-
-import app.config
 
 
 def resolve_relative_path(file: PathLike[AnyStr], path: str) -> str:
@@ -241,9 +238,3 @@ def convert2svg_image(path, after_delete: bool = True):
         delete_file(path)
 
     return svg_output_path
-
-
-def extract_line_by_gan(source_dir, dst_dir):
-    result = requests.post(f'{app.config.gan_api_host}/extract_line',
-                           json={'dataroot': source_dir, 'dst_dir': dst_dir})
-    return result.json()['paths']

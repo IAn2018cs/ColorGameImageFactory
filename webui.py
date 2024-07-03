@@ -6,6 +6,7 @@ from uis.tab_batch2line_art import build_batch2line_art_ui
 from uis.tab_batch_generate import build_batch_generate_ui
 from uis.tab_gan_extract_line import build_gan_extract_line_ui
 from uis.tab_generate_line_art import build_generate_line_art_ui
+from uis.tab_generate_line_art_v2 import build_generate_line_art_v2_ui
 from uis.tab_try_color_game import build_try_color_game_ui
 
 
@@ -25,10 +26,11 @@ def build_webui():
         gr.Markdown("# 填色游戏图片工厂")
         gr.Markdown(
             "## 通过 AI 生成相关提示词，再用 Stable Diffusion 批量生成填色游戏中的图片")
-        with gr.Tabs(selected=2):
+        with gr.Tabs(selected=5):
             build_batch_generate_ui()
             build_batch2line_art_ui()
             build_generate_line_art_ui()
+            build_generate_line_art_v2_ui()
             build_try_color_game_ui()
             build_gan_extract_line_ui()
 
