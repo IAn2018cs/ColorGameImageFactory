@@ -4,6 +4,7 @@ import app.config
 from app.tools import read_file_to_list_of_tuples
 from uis.tab_batch2line_art import build_batch2line_art_ui
 from uis.tab_batch_generate import build_batch_generate_ui
+from uis.tab_gan_extract_line import build_gan_extract_line_ui
 from uis.tab_generate_line_art import build_generate_line_art_ui
 from uis.tab_try_color_game import build_try_color_game_ui
 
@@ -26,6 +27,7 @@ def build_webui():
             build_batch2line_art_ui()
             build_generate_line_art_ui()
             build_try_color_game_ui()
+            build_gan_extract_line_ui()
 
     auths = read_file_to_list_of_tuples(app.config.net_auth_file_path)
     webui.launch(show_api=False, server_name=app.config.net_host, server_port=app.config.net_port, auth=auths)
