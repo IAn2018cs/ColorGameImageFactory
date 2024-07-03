@@ -9,6 +9,7 @@ from app.sd_tools import generate_image_by_sd
 from app.tools import convert2svg_image
 from app.tools import create_path
 from app.tools import delete_file
+from app.tools import extract_line_by_gan
 from app.tools import generate_random_id
 from app.tools import get_base64_image
 from app.tools import resolve_relative_path
@@ -17,10 +18,10 @@ from app.tools import zip_dir
 from uis.tools import all_category
 from uis.tools import get_models
 from uis.tools import get_train_loras
+from uis.tools import refresh_loras
+from uis.tools import refresh_models
 from uis.tools import sampling_method
 from uis.tools import schedule_type
-from uis.tools import refresh_models
-from uis.tools import refresh_loras
 
 
 def generate_line_art_images(root_path, batch_id, prompts, n_iter,
@@ -148,10 +149,12 @@ def invert_black_image2svg(root_path, batch_id, images):
     return result
 
 
-def convert2svg(images):
+def convert2svg(batch_id, images_root_path):
+    root_path = resolve_relative_path(__file__, '../output')
+    output_dir = f'{root_path}/{batch_id}/'
+    line_result = extract_line_by_gan(images_root_path, output_dir)
     result = []
-    for info in images:
-        path = info['image']
+    for path in line_result:
         new_path = convert2svg_image(path, after_delete=True)
         result.append(new_path)
     return result
@@ -180,6 +183,8 @@ def start_gan_line_art(category, image_count, num_colors,
                                                        line_lora, line_weight, line_trigger, line_negative,
                                                        line_sampling,
                                                        line_schedule, line_step, line_cfg)
+        line_art_paths = [info['image'] for info in line_art_images]
+        line_art_zip_file = zip_dir(f'{root_path}/{line_art_batch_id}', line_art_batch_id, root_path)
 
         # 1. lineart_anime_denoise 预处理成 黑底白线图
         black_base64_images = convert_line_art2black_images(root_path, line_art_batch_id, line_art_images)
@@ -191,9 +196,10 @@ def start_gan_line_art(category, image_count, num_colors,
                                                    color_sampling, color_schedule, color_step, color_cfg)
         colorful_zip_file = zip_dir(f'{root_path}/{colorful_batch_id}', colorful_batch_id, root_path)
 
-        # 3. 将第 1 步中的图转成 svg 图 -> 线稿图 保存一个结果
-        svg_images = convert2svg(line_art_images)
-        svg_zip_file = zip_dir(f'{root_path}/{line_art_batch_id}', line_art_batch_id, root_path)
+        # 3. 通过 gan 模型提取线稿，转成 svg -> 线稿图 保存一个结果
+        gan_batch_id = generate_random_id(16)
+        svg_images = convert2svg(gan_batch_id, f'{root_path}/{colorful_batch_id}/')
+        svg_zip_file = zip_dir(f'{root_path}/{gan_batch_id}', gan_batch_id, root_path)
 
         # 4. 上色图颜色聚类 -> 聚类图 保存一个结果
         quantization_batch_id = generate_random_id(16)
@@ -201,7 +207,8 @@ def start_gan_line_art(category, image_count, num_colors,
         quantization_zip_file = zip_dir(f'{root_path}/{quantization_batch_id}', quantization_batch_id, root_path)
 
         return (
-            colorful_images, svg_images, quantization_images,
+            line_art_paths, colorful_images, svg_images, quantization_images,
+            gr.DownloadButton(value=line_art_zip_file, visible=True),
             gr.DownloadButton(value=colorful_zip_file, visible=True),
             gr.DownloadButton(value=svg_zip_file, visible=True),
             gr.DownloadButton(value=quantization_zip_file, visible=True)
@@ -366,18 +373,23 @@ def build_generate_line_art_ui():
         with gr.Row():
             with gr.Column():
                 line_art_gallery = gr.Gallery(
-                    label="线稿图", format="svg",
-                    columns=4, rows=1, object_fit="contain")
+                    label="线稿图", format="png",
+                    columns=3, rows=1, object_fit="contain")
                 download_line_art_button = gr.DownloadButton("下载所有线稿图", visible=False)
             with gr.Column():
                 gallery = gr.Gallery(
                     label="上色图", format="png",
-                    columns=4, rows=1, object_fit="contain")
+                    columns=3, rows=1, object_fit="contain")
                 download_all_button = gr.DownloadButton("下载所有上色图", visible=False)
+            with gr.Column():
+                gan_line_gallery = gr.Gallery(
+                    label="GAN 模型提取线稿图", format="svg",
+                    columns=3, rows=1, object_fit="contain")
+                download_gan_line_button = gr.DownloadButton("下载所有提取的线稿图", visible=False)
             with gr.Column():
                 color_art_gallery = gr.Gallery(
                     label="颜色聚类图", format="svg",
-                    columns=4, rows=1, object_fit="contain")
+                    columns=3, rows=1, object_fit="contain")
                 download_color_art_button = gr.DownloadButton("下载所有颜色聚类图", visible=False)
 
         num_colors = gr.Slider(
@@ -399,11 +411,13 @@ def build_generate_line_art_ui():
                 color_step, color_cfg
             ],
             outputs=[
-                gallery,
                 line_art_gallery,
+                gallery,
+                gan_line_gallery,
                 color_art_gallery,
-                download_all_button,
                 download_line_art_button,
+                download_all_button,
+                download_gan_line_button,
                 download_color_art_button
             ],
             scroll_to_output=True

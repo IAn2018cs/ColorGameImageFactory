@@ -134,7 +134,7 @@ def create_color_svg(quantized_image, colors, width, height, output_path, add_la
 
     # 保存主SVG文件
     dwg.save()
-    shutil.rmtree(temp_dir)
+    # shutil.rmtree(temp_dir)
 
     simplified_config = {str(k): v['color'] for k, v in color_config.items()}
     # 将 simplified_config 添加到 SVG 中
@@ -213,7 +213,7 @@ def read_svg_metadata(svg_file_path):
 
 
 if __name__ == '__main__':
-    # new_file_path, output_svg_path = color_quantization('data/10_rgb.png', 10)
+    new_file_path, output_svg_path = color_quantization('data/10_rgb.png', 80)
     # print(new_file_path)
     # print(output_svg_path)
 
