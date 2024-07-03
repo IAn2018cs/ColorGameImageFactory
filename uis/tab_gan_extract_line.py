@@ -14,23 +14,22 @@ from app.tools import resolve_relative_path
 
 def upload_file(files):
     try:
+        root_path = resolve_relative_path(__file__, '../output')
+        output_dir = f'{root_path}/gen_line_outputs'
+        create_path(output_dir)
+
+        source_dir = f'{root_path}/gen_line_inputs/{generate_random_id(12)}'
+        create_path(source_dir)
+
         results = []
         for file in files:
-            root_path = resolve_relative_path(__file__, '../output')
-
-            output_dir = f'{root_path}/gen_line_outputs'
-            create_path(output_dir)
-
-            source_dir = f'{root_path}/gen_line_inputs/{generate_random_id(12)}'
-            create_path(source_dir)
-
             file_name_split = os.path.split(file)[-1].split('.')
             name_ext = file_name_split[-1]
             new_path = f'{source_dir}/{get_timestamp()}_{generate_random_id(4)}.{name_ext}'
             shutil.move(file, new_path)
 
-            result = extract_line_by_gan(f'{source_dir}/', f'{output_dir}/')[0]
-            svg_result = convert2svg_image(result, after_delete=True)
+        for path in extract_line_by_gan(f'{source_dir}/', f'{output_dir}/'):
+            svg_result = convert2svg_image(path, after_delete=True)
             results.append(svg_result)
         return gr.UploadButton(label="更换文件"), results
     except Exception as e:
