@@ -19,7 +19,7 @@ def upload_file(file):
         output_dir = f'{root_path}/gen_line_outputs'
         create_path(output_dir)
 
-        source_dir = f'{root_path}/gen_line_inputs'
+        source_dir = f'{root_path}/gen_line_inputs/{generate_random_id(12)}'
         create_path(source_dir)
 
         file_name_split = os.path.split(file)[-1].split('.')

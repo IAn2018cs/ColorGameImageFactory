@@ -17,6 +17,9 @@ def build_webui():
 .dark .image-button {
     background-color: white !important;
 }
+.dark .image-container {
+    background-color: white !important;
+}
 """
     with gr.Blocks(css=custom_css, theme=gr.themes.Soft()) as webui:
         gr.Markdown("# 填色游戏图片工厂")
