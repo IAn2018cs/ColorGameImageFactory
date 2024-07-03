@@ -13,23 +13,26 @@ from app.tools import resolve_relative_path
 
 
 def upload_file(file):
-    root_path = resolve_relative_path(__file__, '../output')
+    try:
+        root_path = resolve_relative_path(__file__, '../output')
 
-    output_dir = f'{root_path}/gen_line_outputs'
-    create_path(output_dir)
+        output_dir = f'{root_path}/gen_line_outputs'
+        create_path(output_dir)
 
-    source_dir = f'{root_path}/gen_line_inputs'
-    create_path(source_dir)
+        source_dir = f'{root_path}/gen_line_inputs'
+        create_path(source_dir)
 
-    file_name_split = os.path.split(file)[-1].split('.')
-    name_ext = file_name_split[-1]
-    new_path = f'{source_dir}/{get_timestamp()}_{generate_random_id(4)}.{name_ext}'
-    shutil.move(file, new_path)
+        file_name_split = os.path.split(file)[-1].split('.')
+        name_ext = file_name_split[-1]
+        new_path = f'{source_dir}/{get_timestamp()}_{generate_random_id(4)}.{name_ext}'
+        shutil.move(file, new_path)
 
-    result = extract_line_by_gan(f'{source_dir}/', f'{output_dir}/')[0]
-    svg_result = convert2svg_image(result, after_delete=True)
-    print(svg_result)
-    return gr.UploadButton(label="更换文件"), gr.Image(value=svg_result, type="filepath", visible=True)
+        result = extract_line_by_gan(f'{source_dir}/', f'{output_dir}/')[0]
+        svg_result = convert2svg_image(result, after_delete=True)
+        print(svg_result)
+        return gr.UploadButton(label="更换文件"), gr.Image(value=svg_result, type="filepath", visible=True)
+    except Exception as e:
+        gr.Error(f"{e}, 请重试")
 
 
 def build_gan_extract_line_ui():
