@@ -40,7 +40,7 @@ def upload_file(files):
 def build_gan_extract_line_ui():
     with gr.TabItem("GAN 模型提取线稿", id=4):
         svg_gallery = gr.Gallery(
-            label="最终 svg 图", format="svg",
+            show_label=False, format="svg",
             columns=4, rows=1, object_fit="contain")
         upload_button = gr.UploadButton(
             label="上传图片",
