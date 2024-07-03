@@ -224,7 +224,7 @@ def start_gan_line_art(category, image_count, num_colors,
 
 
 def send_to_tab(selected_image):
-    return selected_image
+    return gr.update(elem_id="hidden_file_output", value=selected_image)
 
 
 def build_generate_line_art_v2_ui():
