@@ -32,7 +32,7 @@ def upload_file(file):
         print(svg_result)
         return gr.UploadButton(label="更换文件"), gr.Image(value=svg_result, type="filepath", visible=True)
     except Exception as e:
-        gr.Error(f"{e}, 请重试")
+        raise gr.Error(f"{e}, 请重试")
 
 
 def build_gan_extract_line_ui():
