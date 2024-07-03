@@ -14,7 +14,7 @@ def clear_color(file, colors):
 if __name__ == '__main__':
     input_path = "./data/10_rgb.png"
 
-    svg_file = color_quantization(input_path, './data/1720011440260_BdUc_line.svg', './data', threshold=10)
+    svg_file = color_quantization(input_path, './data/1720011440260_BdUc_line.svg', './data', threshold=30)
     cs = read_svg_metadata(svg_file)
 
     clear_color(svg_file, cs)

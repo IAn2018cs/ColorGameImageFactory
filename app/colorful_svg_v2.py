@@ -46,7 +46,7 @@ def color_quantization(img_path, line_svg_path, output_dir, threshold=30):
     # 遍历所有path元素
     for index, path in enumerate(root.findall('.//{http://www.w3.org/2000/svg}path')):
         fill_color = path.get('fill')
-        if fill_color:
+        if fill_color and not is_close_to_black(fill_color):
             if fill_color not in color_to_indices:
                 color_to_indices[fill_color] = []
             color_to_indices[fill_color].append(index)
@@ -95,7 +95,7 @@ def color_distance(color1, color2):
     return math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2)
 
 
-def is_close_to_black(color, threshold=30):
+def is_close_to_black(color, threshold=20):
     r, g, b = hex_to_rgb(color)
     return all(c <= threshold for c in (r, g, b))
 

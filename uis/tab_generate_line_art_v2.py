@@ -217,8 +217,7 @@ def start_gan_line_art(category, image_count, num_colors,
             gr.DownloadButton(value=line_art_zip_file, visible=True),
             gr.DownloadButton(value=colorful_zip_file, visible=True),
             gr.DownloadButton(value=svg_zip_file, visible=True),
-            gr.DownloadButton(value=quantization_zip_file, visible=True),
-            gr.Button(visible=True)
+            gr.DownloadButton(value=quantization_zip_file, visible=True)
         )
     except Exception as e:
         raise gr.Error(f"发生错误：{e}，请重试")
@@ -408,12 +407,7 @@ def build_generate_line_art_v2_ui():
                 color_art_svg_gallery = gr.Gallery(
                     label="最终 svg 图", format="svg",
                     columns=2, rows=1, object_fit="contain")
-                selected_image = gr.State(None)
-                color_art_svg_gallery.select(lambda x: x, None, selected_image)
-                with gr.Row():
-                    send_button = gr.Button("尝试填色游戏", visible=False)
-                    send_button.click(send_to_tab, inputs=[selected_image])
-                    download_color_art_button = gr.DownloadButton("下载所有 svg 彩图", visible=False)
+                download_color_art_button = gr.DownloadButton("下载所有 svg 彩图", visible=False)
 
         btn = gr.Button("开始批量生成", variant="primary")
         btn.click(
@@ -430,8 +424,7 @@ def build_generate_line_art_v2_ui():
                 download_line_art_button,
                 download_all_button,
                 download_gan_line_button,
-                download_color_art_button,
-                send_button
+                download_color_art_button
             ],
             scroll_to_output=True
         )
