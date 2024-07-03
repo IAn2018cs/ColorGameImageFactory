@@ -374,23 +374,23 @@ def build_generate_line_art_ui():
         with gr.Row():
             with gr.Column():
                 line_art_gallery = gr.Gallery(
-                    label="线稿图", format="png",
-                    columns=3, rows=1, object_fit="contain")
-                download_line_art_button = gr.DownloadButton("下载所有线稿图", visible=False)
+                    label="生成的线稿图", format="png",
+                    columns=2, rows=1, object_fit="contain")
+                download_line_art_button = gr.DownloadButton("下载所有生成的线稿图", visible=False)
             with gr.Column():
                 gallery = gr.Gallery(
                     label="上色图", format="png",
-                    columns=3, rows=1, object_fit="contain")
+                    columns=2, rows=1, object_fit="contain")
                 download_all_button = gr.DownloadButton("下载所有上色图", visible=False)
             with gr.Column():
                 gan_line_gallery = gr.Gallery(
                     label="GAN 模型提取线稿图", format="svg",
-                    columns=3, rows=1, object_fit="contain")
-                download_gan_line_button = gr.DownloadButton("下载所有提取的线稿图", visible=False)
+                    columns=2, rows=1, object_fit="contain")
+                download_gan_line_button = gr.DownloadButton("下载所有 GAN 提取的线稿图", visible=False)
             with gr.Column():
                 color_art_gallery = gr.Gallery(
                     label="颜色聚类图", format="svg",
-                    columns=3, rows=1, object_fit="contain")
+                    columns=2, rows=1, object_fit="contain")
                 download_color_art_button = gr.DownloadButton("下载所有颜色聚类图", visible=False)
 
         num_colors = gr.Slider(
