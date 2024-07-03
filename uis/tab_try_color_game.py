@@ -63,7 +63,7 @@ def build_try_color_game_ui():
             file_types=['.svg']
         )
         upload_button.upload(upload_file, [upload_button, colors], [upload_button, reset_bt, image, colors])
-        file_output = gr.File(visible=False, elem_id="file_output")
+        file_output = gr.File(visible=False, elem_id="hidden_file_output")
         file_output.change(
             upload_file,
             [file_output, colors],

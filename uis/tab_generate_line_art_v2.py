@@ -411,7 +411,7 @@ def build_generate_line_art_v2_ui():
                 send_button = gr.Button("尝试填色游戏", visible=False)
                 download_color_art_button = gr.DownloadButton("下载所有 svg 彩图", visible=False)
                 color_art_svg_gallery.select(lambda x: x, None, selected_image)
-                send_button.click(send_to_tab, inputs=[selected_image], outputs=["file_output"])
+                send_button.click(send_to_tab, inputs=[selected_image], outputs=["hidden_file_output"])
 
         btn = gr.Button("开始批量生成", variant="primary")
         btn.click(
