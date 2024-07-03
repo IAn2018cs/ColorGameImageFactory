@@ -223,6 +223,10 @@ def start_gan_line_art(category, image_count, num_colors,
         raise gr.Error(f"发生错误：{e}，请重试")
 
 
+def send_to_tab(selected_image):
+    return selected_image
+
+
 def build_generate_line_art_v2_ui():
     with gr.TabItem("线稿 + 上色 + 彩图SVG 模式", id=5):
         category = gr.Dropdown(
@@ -399,11 +403,15 @@ def build_generate_line_art_v2_ui():
                     label="GAN 模型提取线稿图", format="svg",
                     columns=2, rows=1, object_fit="contain")
                 download_gan_line_button = gr.DownloadButton("下载所有 GAN 提取的线稿图", visible=False)
-            with gr.Row():
+            with gr.Column():
                 color_art_svg_gallery = gr.Gallery(
                     label="最终 svg 图", format="svg",
                     columns=2, rows=1, object_fit="contain")
+                selected_image = gr.State(None)
+                send_button = gr.Button("尝试填色游戏", visible=False)
                 download_color_art_button = gr.DownloadButton("下载所有 svg 彩图", visible=False)
+                color_art_svg_gallery.select(lambda x: x, None, selected_image)
+                send_button.click(send_to_tab, inputs=[selected_image], outputs=["file_output"])
 
         btn = gr.Button("开始批量生成", variant="primary")
         btn.click(
