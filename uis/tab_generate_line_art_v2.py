@@ -385,7 +385,7 @@ def build_generate_line_art_v2_ui():
             minimum=10,
             maximum=100,
             step=1,
-            label="合并相似颜色阈值"
+            label="合并相似颜色阈值（值越大，颜色越少，越小，颜色越多）"
         )
         with gr.Row():
             with gr.Column():
