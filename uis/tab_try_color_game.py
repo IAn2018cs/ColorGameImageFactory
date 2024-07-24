@@ -63,3 +63,5 @@ def build_try_color_game_ui():
             file_types=['.svg']
         )
         upload_button.upload(upload_file, [upload_button, colors], [upload_button, reset_bt, image, colors])
+
+    return upload_button, reset_bt, image, colors

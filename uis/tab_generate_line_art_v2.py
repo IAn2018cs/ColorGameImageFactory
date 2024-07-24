@@ -223,8 +223,39 @@ def start_gan_line_art(category, image_count, num_colors,
         raise gr.Error(f"发生错误：{e}，请重试")
 
 
-def send_to_tab(selected_image):
-    return gr.update(elem_id="hidden_file_output", value=selected_image)
+def generate_gallery_load_js():
+    return """
+    function() {
+        setTimeout(function() {
+            const galleryElems = document.querySelectorAll('.gallery-item');
+            galleryElems.forEach(function(elem) {
+                if (!elem.querySelector('.send-to-coloring-game')) {
+                    const btn = document.createElement('button');
+                    btn.textContent = '发送到填色游戏';
+                    btn.className = 'send-to-coloring-game';
+                    btn.style.position = 'absolute';
+                    btn.style.bottom = '10px';
+                    btn.style.right = '10px';
+                    btn.style.zIndex = '1000';
+                    btn.onclick = function(e) {
+                        e.stopPropagation();
+                        const img = elem.querySelector('img');
+                        if (img) {
+                            gradioApp().querySelector('#send-to-coloring-game-hidden').click();
+                            gradioApp().querySelector('#selected-image-for-coloring').value = img.src;
+                        }
+                    };
+                    elem.style.position = 'relative';
+                    elem.appendChild(btn);
+                }
+            });
+        }, 100);
+    }
+    """
+
+
+def add_buttons_to_gallery():
+    pass
 
 
 def build_generate_line_art_v2_ui():
@@ -407,6 +438,13 @@ def build_generate_line_art_v2_ui():
                 color_art_svg_gallery = gr.Gallery(
                     label="最终 svg 图", format="svg",
                     columns=2, rows=1, object_fit="contain")
+                color_art_svg_gallery.change(
+                    fn=add_buttons_to_gallery,
+                    inputs=[],
+                    outputs=[],
+                    js=generate_gallery_load_js()
+                )
+                # color_art_svg_gallery.attach_load_event(generate_gallery_load_js, None)
                 download_color_art_button = gr.DownloadButton("下载所有 svg 彩图", visible=False)
 
         btn = gr.Button("开始批量生成", variant="primary")

@@ -8,6 +8,16 @@ from uis.tab_gan_extract_line import build_gan_extract_line_ui
 from uis.tab_generate_line_art import build_generate_line_art_ui
 from uis.tab_generate_line_art_v2 import build_generate_line_art_v2_ui
 from uis.tab_try_color_game import build_try_color_game_ui
+from uis.tab_try_color_game import upload_file
+
+
+def send_to_color_game(svg_file, colors_dw):
+    # 返回多个更新
+    upload_button, reset_bt, image, colors = upload_file(svg_file, colors_dw)
+    return (
+        upload_button, reset_bt, image, colors,
+        gr.Tabs(selected=3)  # 切换到填色游戏 Tab
+    )
 
 
 def build_webui():
@@ -26,13 +36,25 @@ def build_webui():
         gr.Markdown("# 填色游戏图片工厂")
         gr.Markdown(
             "## 通过 AI 生成相关提示词，再用 Stable Diffusion 批量生成填色游戏中的图片")
-        with gr.Tabs(selected=5):
+        with gr.Tabs(selected=5) as tabs:
             build_batch_generate_ui()
             build_batch2line_art_ui()
             build_generate_line_art_ui()
             build_generate_line_art_v2_ui()
-            build_try_color_game_ui()
+            upload_button, reset_bt, image, colors = build_try_color_game_ui()
             build_gan_extract_line_ui()
+
+        # 添加隐藏的按钮和输入框
+        send_to_coloring_game_hidden = gr.Button("Send to Coloring Game", elem_id="send-to-coloring-game-hidden",
+                                                 visible=False)
+        selected_image_for_coloring = gr.Textbox(elem_id="selected-image-for-coloring", visible=False)
+
+        # 连接生成线稿的 Tab 和填色游戏的 Tab
+        send_to_coloring_game_hidden.click(
+            send_to_color_game,
+            inputs=[selected_image_for_coloring, colors],
+            outputs=[upload_button, reset_bt, image, colors, tabs]
+        )
 
     auths = read_file_to_list_of_tuples(app.config.net_auth_file_path)
     webui.launch(show_api=False, server_name=app.config.net_host, server_port=app.config.net_port, auth=auths)
