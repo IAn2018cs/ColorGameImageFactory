@@ -12,6 +12,9 @@ from uis.tab_try_color_game import upload_file
 
 
 def send_to_color_game(svg_file, colors_dw):
+    svg_file = svg_file['image']['path']
+    print(f"svg_file: {svg_file}")
+    print(f"colors_dw: {colors_dw}")
     # 返回多个更新
     upload_button, reset_bt, image, colors = upload_file(svg_file, colors_dw)
     return (
@@ -40,19 +43,14 @@ def build_webui():
             build_batch_generate_ui()
             build_batch2line_art_ui()
             build_generate_line_art_ui()
-            build_generate_line_art_v2_ui()
+            send_to_coloring_game_btn, selected_image = build_generate_line_art_v2_ui()
             upload_button, reset_bt, image, colors = build_try_color_game_ui()
             build_gan_extract_line_ui()
 
-        # 添加隐藏的按钮和输入框
-        send_to_coloring_game_hidden = gr.Button("Send to Coloring Game", elem_id="send-to-coloring-game-hidden",
-                                                 visible=False)
-        selected_image_for_coloring = gr.Textbox(elem_id="selected-image-for-coloring", visible=False)
-
         # 连接生成线稿的 Tab 和填色游戏的 Tab
-        send_to_coloring_game_hidden.click(
+        send_to_coloring_game_btn.click(
             send_to_color_game,
-            inputs=[selected_image_for_coloring, colors],
+            inputs=[selected_image, colors],
             outputs=[upload_button, reset_bt, image, colors, tabs]
         )
 
