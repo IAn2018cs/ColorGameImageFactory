@@ -1,5 +1,6 @@
 gradio
 requests
+requests-toolbelt
 pillow
 opencv-python
 scikit-learn

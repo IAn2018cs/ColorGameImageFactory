@@ -1,15 +1,19 @@
 # coding=utf-8
 import os
 import shutil
+import time
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, url_for, send_from_directory
 from models import create_model
 from options.test_options import TestOptions
 from util import util
+from werkzeug.utils import secure_filename
 
 from data import create_dataset
 
-app = Flask(__name__)
+app = Flask(__name__, root_path=os.path.dirname(os.path.abspath(__file__)))
+app.config['CACHE_DIR'] = os.path.join(app.root_path, 'temp_dst_dir')
+os.makedirs(app.config['CACHE_DIR'], exist_ok=True)
 
 
 def save_images(ori_name, visuals, root_dir, aspect_ratio=1.0):
@@ -34,15 +38,35 @@ def save_images(ori_name, visuals, root_dir, aspect_ratio=1.0):
     return ims
 
 
+@app.route('/downloads/<path:filename>')
+def download_file(filename):
+    return send_from_directory(app.config['CACHE_DIR'], filename, as_attachment=True)
+
+
 @app.route('/extract_line', methods=['POST'])
 def extract_line():
-    dataroot = request.json['dataroot']
-    dst_dir = request.json['dst_dir']
+    # 创建带时间戳的唯一临时目录
+    timestamp = int(time.time())
+    temp_dir = f'temp_uploads_{timestamp}'
+    dataroot = os.path.join(app.root_path, 'temp_uploads', temp_dir)
+    os.makedirs(dataroot, exist_ok=True)
+
+    # 设置输出目录
+    dst_dir = app.config['CACHE_DIR']
+
+    # 保存上传的文件
+    saved_files = []
+    for key, file in request.files.items():
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(dataroot, filename)
+        file.save(file_path)
+        saved_files.append(file_path)
+
+    if not saved_files:
+        return jsonify({'error': 'No valid files uploaded'}), 400
 
     print(f'dataroot: {dataroot}')
     print(f'dst_dir: {dst_dir}')
-
-    os.makedirs(dst_dir, exist_ok=True)
 
     opt = TestOptions().parse()
     # hard-code some parameters for test
@@ -53,7 +77,7 @@ def extract_line():
     opt.display_id = -1  # no visdom display; the test code saves the results to a HTML file.
 
     opt.dataroot = dataroot
-    opt.name = 'sketch_pix2pix_512'
+    opt.name = 'stroke_pix2pix'
     opt.model = 'test'
     opt.netG = 'unet_256'
     opt.direction = 'AtoB'
@@ -85,12 +109,16 @@ def extract_line():
         file_name_split = os.path.split(img_path[0])[-1].split('.')
         name = file_name_split[0]
 
-        result.extend(save_images(name, visuals, dst_dir))
+        saved_paths = save_images(name, visuals, dst_dir)
+
+        # Convert file paths to URLs
+        urls = [url_for('download_file', filename=os.path.basename(path), _external=True) for path in saved_paths]
+        result.extend(urls)
 
     if os.path.exists(cache_path):
         shutil.rmtree(cache_path)
 
-    return jsonify({'paths': result})
+    return jsonify({'urls': result})
 
 
 app.run(host='0.0.0.0', port=9091)
