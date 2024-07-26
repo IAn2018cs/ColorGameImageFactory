@@ -224,7 +224,7 @@ def start_gan_line_art(category, image_count, num_colors,
 
 
 def build_generate_line_art_ui():
-    with gr.TabItem("线稿 + 上色 + 颜色聚类模式", id=TabId.GENERATE_LINE_ART_CLUSTERING.value):
+    with gr.TabItem("SD 线稿 + 上色 + 颜色聚类模式", id=TabId.GENERATE_LINE_ART_CLUSTERING.value):
         category = gr.Dropdown(
             choices=all_category,
             value=all_category[0],
@@ -408,6 +408,16 @@ def build_generate_line_art_ui():
                 color_art_svg_gallery = gr.Gallery(
                     label="颜色聚类 svg 图", format="svg",
                     columns=2, rows=1, object_fit="contain")
+
+            with gr.Row(visible=False) as send_row:
+                selected_image = gr.State(None)
+                send_to_coloring_game_btn = gr.Button("发送到填色游戏")
+
+            def show_send_button(evt: gr.SelectData):
+                return gr.Row(visible=True), evt.value
+
+            color_art_svg_gallery.select(show_send_button, None, [send_row, selected_image])
+
             download_color_art_button = gr.DownloadButton("下载所有颜色聚类图", visible=False)
 
         btn = gr.Button("开始批量生成", variant="primary")
@@ -433,3 +443,4 @@ def build_generate_line_art_ui():
             ],
             scroll_to_output=True
         )
+    return send_to_coloring_game_btn, selected_image

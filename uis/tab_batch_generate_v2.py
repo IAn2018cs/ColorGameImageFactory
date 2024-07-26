@@ -117,7 +117,7 @@ def generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_
 
 
 def build_batch_generate_v2_ui():
-    with gr.TabItem("直接生图 + 彩图SVG 模式", id=TabId.BATCH_GENERATE_V2.value):
+    with gr.TabItem("SD 直接生图 + 彩图SVG 模式", id=TabId.BATCH_GENERATE_V2.value):
         category = gr.Dropdown(
             choices=all_category,
             value=all_category[0],

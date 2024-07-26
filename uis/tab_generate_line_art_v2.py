@@ -225,7 +225,7 @@ def start_gan_line_art(category, image_count, num_colors, min_ares,
 
 
 def build_generate_line_art_v2_ui():
-    with gr.TabItem("线稿 + 上色 + 彩图SVG 模式", id=TabId.GENERATE_LINE_ART_SVG.value):
+    with gr.TabItem("SD 线稿 + 上色 + 彩图SVG 模式", id=TabId.GENERATE_LINE_ART_SVG.value):
         category = gr.Dropdown(
             choices=all_category,
             value=all_category[0],

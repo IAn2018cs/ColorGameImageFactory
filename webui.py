@@ -44,7 +44,7 @@ def build_webui(default_tab: TabId):
         send_to_color_game_btn_list = []
         with gr.Tabs(selected=default_tab.value) as tabs:
             send_to_color_game_btn_list.append(build_batch_generate_v2_ui())
-            build_generate_line_art_ui()
+            send_to_color_game_btn_list.append(build_generate_line_art_ui())
             send_to_color_game_btn_list.append(build_generate_line_art_v2_ui())
             upload_button, reset_bt, image, colors = build_try_color_game_ui()
             build_gan_extract_line_ui()
