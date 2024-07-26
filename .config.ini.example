@@ -34,3 +34,7 @@ default_line_sd_schedule =
 default_line_sd_steps =
 default_line_sd_cfg =
 gan_api_host =
+
+[mj]
+mj_host =
+mj_api_key =
