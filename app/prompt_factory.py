@@ -6,6 +6,13 @@ from app.llm_tools import generate_by_ollama
 from app.llm_tools import generate_by_openai
 
 
+def extract_json(response):
+    response = response.replace("JSON\n", "").replace("json\n", "").replace("```", "")
+    json_start = response.index("{")
+    json_end = response.rfind("}")
+    return json.loads(response[json_start:json_end + 1])
+
+
 def create_sd_prompts(category: str, prompt_count: int) -> list[str]:
     system = """
     请根据以下输入类型，批量生成用于 Stable Diffusion 绘画模型的 prompt。每个 prompt 主要以英文单词或短语组成，之间用英文 , 分割。生成的图片将用于填色游戏，所以图片的风格应该是漫画风，色彩鲜明，线条清晰。输出以 {"result": []} 的 JSON 格式呈现。
@@ -67,5 +74,5 @@ def create_sd_prompts(category: str, prompt_count: int) -> list[str]:
     else:
         output = generate_by_openai(app.config.default_llm_model, messages, json_format=True)
 
-    result = json.loads(output)
+    result = extract_json(output)
     return [item['prompt'] for item in result['result']]
