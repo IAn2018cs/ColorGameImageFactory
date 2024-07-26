@@ -93,7 +93,6 @@ def color_quantization(img_path, line_svg_path, output_dir, threshold=30, area_t
     colors_to_merge = [color for color, area in sorted_colors if area < area_threshold]
     if colors_to_merge:
         for small_color in colors_to_merge:
-            print(f"find small_color: {small_color}")
             nearest_large_color = find_nearest_large_color(small_color, sorted_colors, area_threshold)
             if nearest_large_color:
                 # 更新所有使用小面积颜色的路径

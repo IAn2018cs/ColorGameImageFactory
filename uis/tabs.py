@@ -10,3 +10,4 @@ class TabId(enum.Enum):
     GAN_EXTRACT_LINE = 4
     GENERATE_LINE_ART_SVG = 5
     IMAGE2SVG = 6
+    BATCH_GENERATE_V2 = 7
