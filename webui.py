@@ -7,23 +7,26 @@ from uis.tab_batch_generate import build_batch_generate_ui
 from uis.tab_gan_extract_line import build_gan_extract_line_ui
 from uis.tab_generate_line_art import build_generate_line_art_ui
 from uis.tab_generate_line_art_v2 import build_generate_line_art_v2_ui
+from uis.tab_image_to_svg import build_image_to_svg_ui
 from uis.tab_try_color_game import build_try_color_game_ui
 from uis.tab_try_color_game import upload_file
+from uis.tabs import TabId
 
 
 def send_to_color_game(svg_file, colors_dw):
-    svg_file = svg_file['image']['path']
+    if isinstance(svg_file, dict):
+        svg_file = svg_file['image']['path']
     print(f"svg_file: {svg_file}")
     print(f"colors_dw: {colors_dw}")
     # 返回多个更新
     upload_button, reset_bt, image, colors = upload_file(svg_file, colors_dw)
     return (
         upload_button, reset_bt, image, colors,
-        gr.Tabs(selected=3)  # 切换到填色游戏 Tab
+        gr.Tabs(selected=TabId.TRY_COLOR_GAME.value)  # 切换到填色游戏 Tab
     )
 
 
-def build_webui():
+def build_webui(default_tab: TabId):
     custom_css = """
 .dark .thumbnail-item {
     background-color: white !important;
@@ -39,18 +42,24 @@ def build_webui():
         gr.Markdown("# 填色游戏图片工厂")
         gr.Markdown(
             "## 通过 AI 生成相关提示词，再用 Stable Diffusion 批量生成填色游戏中的图片")
-        with gr.Tabs(selected=5) as tabs:
+        with gr.Tabs(selected=default_tab.value) as tabs:
             build_batch_generate_ui()
             build_batch2line_art_ui()
             build_generate_line_art_ui()
             send_to_coloring_game_btn, selected_image = build_generate_line_art_v2_ui()
             upload_button, reset_bt, image, colors = build_try_color_game_ui()
             build_gan_extract_line_ui()
+            send_to_coloring_game_btn2, svg_image = build_image_to_svg_ui()
 
         # 连接生成线稿的 Tab 和填色游戏的 Tab
         send_to_coloring_game_btn.click(
             send_to_color_game,
             inputs=[selected_image, colors],
+            outputs=[upload_button, reset_bt, image, colors, tabs]
+        )
+        send_to_coloring_game_btn2.click(
+            send_to_color_game,
+            inputs=[svg_image, colors],
             outputs=[upload_button, reset_bt, image, colors, tabs]
         )
 
@@ -59,4 +68,4 @@ def build_webui():
 
 
 if __name__ == '__main__':
-    build_webui()
+    build_webui(default_tab=TabId.GENERATE_LINE_ART_SVG)

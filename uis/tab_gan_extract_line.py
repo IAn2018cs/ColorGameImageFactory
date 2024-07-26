@@ -10,6 +10,7 @@ from app.tools import create_path
 from app.tools import generate_random_id
 from app.tools import get_timestamp
 from app.tools import resolve_relative_path
+from uis.tabs import TabId
 
 
 def upload_file(files):
@@ -37,7 +38,7 @@ def upload_file(files):
 
 
 def build_gan_extract_line_ui():
-    with gr.TabItem("GAN 模型提取线稿", id=4):
+    with gr.TabItem("GAN 模型提取线稿", id=TabId.GAN_EXTRACT_LINE.value):
         svg_gallery = gr.Gallery(
             show_label=False, format="svg",
             columns=4, rows=1, object_fit="contain")

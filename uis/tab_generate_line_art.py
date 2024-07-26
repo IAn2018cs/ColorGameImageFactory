@@ -15,6 +15,7 @@ from app.tools import get_base64_image
 from app.tools import resolve_relative_path
 from app.tools import split_list_with_min_length
 from app.tools import zip_dir
+from uis.tabs import TabId
 from uis.tools import all_category
 from uis.tools import get_models
 from uis.tools import get_train_loras
@@ -223,7 +224,7 @@ def start_gan_line_art(category, image_count, num_colors,
 
 
 def build_generate_line_art_ui():
-    with gr.TabItem("线稿 + 上色 + 颜色聚类模式", id=2):
+    with gr.TabItem("线稿 + 上色 + 颜色聚类模式", id=TabId.GENERATE_LINE_ART_CLUSTERING.value):
         category = gr.Dropdown(
             choices=all_category,
             value=all_category[0],

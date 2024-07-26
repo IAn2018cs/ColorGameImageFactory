@@ -13,6 +13,7 @@ from app.tools import generate_random_id
 from app.tools import resolve_relative_path
 from app.tools import split_list_with_min_length
 from app.tools import zip_dir
+from uis.tabs import TabId
 from uis.tools import all_category
 from uis.tools import refresh_loras
 from uis.tools import refresh_models
@@ -87,7 +88,7 @@ def generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_
 
 
 def build_batch_generate_ui():
-    with gr.TabItem("批量生图测试", id=0):
+    with gr.TabItem("批量生图测试", id=TabId.BATCH_GENERATE.value):
         category = gr.Dropdown(
             choices=all_category,
             value=all_category[0],

@@ -15,6 +15,7 @@ from app.tools import get_base64_image
 from app.tools import resolve_relative_path
 from app.tools import split_list_with_min_length
 from app.tools import zip_dir
+from uis.tabs import TabId
 from uis.tools import all_category
 from uis.tools import get_models
 from uis.tools import get_train_loras
@@ -161,7 +162,7 @@ def convert2svg(batch_id, images_root_path):
     return result
 
 
-def generate_quantization_images(quantization_batch_id, colorful_images, line_svg_images, num_colors):
+def generate_quantization_images(quantization_batch_id, colorful_images, line_svg_images, num_colors, min_ares):
     root_path = resolve_relative_path(__file__, '../output')
     output_dir = f'{root_path}/{quantization_batch_id}'
     create_path(output_dir)
@@ -169,12 +170,12 @@ def generate_quantization_images(quantization_batch_id, colorful_images, line_sv
     svg_results = []
     for index, colorful_image in enumerate(colorful_images):
         line_svg = line_svg_images[index]
-        svg_img = color_quantization(colorful_image, line_svg, output_dir, num_colors)
+        svg_img = color_quantization(colorful_image, line_svg, output_dir, num_colors, min_ares)
         svg_results.append(svg_img)
     return svg_results
 
 
-def start_gan_line_art(category, image_count, num_colors,
+def start_gan_line_art(category, image_count, num_colors, min_ares,
                        line_model, line_lora, line_weight, line_trigger, line_negative, line_sampling, line_schedule,
                        line_step, line_cfg,
                        color_model, color_lora, color_weight, color_trigger, color_negative, color_sampling,
@@ -209,7 +210,7 @@ def start_gan_line_art(category, image_count, num_colors,
         quantization_batch_id = generate_random_id(16)
         quantization_svg_images = generate_quantization_images(quantization_batch_id,
                                                                colorful_images, svg_images,
-                                                               num_colors)
+                                                               num_colors, min_ares)
         quantization_zip_file = zip_dir(f'{root_path}/{quantization_batch_id}', quantization_batch_id, root_path)
 
         return (
@@ -224,7 +225,7 @@ def start_gan_line_art(category, image_count, num_colors,
 
 
 def build_generate_line_art_v2_ui():
-    with gr.TabItem("线稿 + 上色 + 彩图SVG 模式", id=5):
+    with gr.TabItem("线稿 + 上色 + 彩图SVG 模式", id=TabId.GENERATE_LINE_ART_SVG.value):
         category = gr.Dropdown(
             choices=all_category,
             value=all_category[0],
@@ -383,6 +384,13 @@ def build_generate_line_art_v2_ui():
             step=1,
             label="合并相似颜色阈值（值越大，颜色越少，越小，颜色越多）"
         )
+        min_ares = gr.Slider(
+            value=2000,
+            minimum=0,
+            maximum=10000,
+            step=10,
+            label="合并面积小的色块阈值（值越大，颜色越少，越小，颜色越多）"
+        )
         with gr.Row():
             with gr.Column():
                 line_art_gallery = gr.Gallery(
@@ -418,7 +426,7 @@ def build_generate_line_art_v2_ui():
         btn.click(
             fn=start_gan_line_art,
             inputs=[
-                category, image_count, num_colors,
+                category, image_count, num_colors, min_ares,
                 line_model, line_lora, line_weight, line_trigger, line_negative, line_sampling, line_schedule,
                 line_step, line_cfg,
                 color_model, color_lora, color_weight, color_trigger, color_negative, color_sampling, color_schedule,

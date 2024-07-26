@@ -1,11 +1,12 @@
 # coding=utf-8
 import json
-import math
 import os
 import re
 import xml.etree.ElementTree as ET
 
+import math
 import vtracer
+from shapely.geometry import Polygon
 
 
 def convert_image2color_svg(img_path, output_path):
@@ -27,7 +28,17 @@ def convert_image2color_svg(img_path, output_path):
     )
 
 
-def color_quantization(img_path, line_svg_path, output_dir, threshold=30):
+def calculate_path_area(d):
+    # 简单的面积计算，可能需要更复杂的实现
+    coords = re.findall(r'[-+]?\d*\.\d+|\d+', d)
+    coords = [float(coord) for coord in coords]
+    if len(coords) < 6:
+        return 0
+    polygon = Polygon(zip(coords[::2], coords[1::2]))
+    return polygon.area
+
+
+def color_quantization(img_path, line_svg_path, output_dir, threshold=30, area_threshold=2000):
     file_name_split = os.path.split(img_path)[-1].split('.')
     name = file_name_split[0]
     svg_path = f'{output_dir}/{name}.svg'
@@ -57,16 +68,50 @@ def color_quantization(img_path, line_svg_path, output_dir, threshold=30):
     # 创建新的颜色配置
     new_color_to_indices = {}
     color_config = {}
+    color_areas = {}
 
     for color_index, (main_color, similar_colors) in enumerate(merged_colors.items()):
         color_config[str(color_index)] = main_color
         new_color_to_indices[main_color] = []
+        total_area = 0
         for color in similar_colors:
             new_color_to_indices[main_color].extend(color_to_indices[color])
             for index in color_to_indices[color]:
                 path = root.findall('.//{http://www.w3.org/2000/svg}path')[index]
                 path.set('fill', main_color)
                 path.set('id', str(color_index))
+
+                # 计算路径面积
+                d = path.get('d')
+                area = calculate_path_area(d)
+                total_area += area
+        color_areas[main_color] = total_area
+
+    # 合并小面积的颜色
+    print(f"合并面积之前：{len(color_config)}")
+    sorted_colors = sorted(color_areas.items(), key=lambda x: x[1], reverse=True)
+    colors_to_merge = [color for color, area in sorted_colors if area < area_threshold]
+    if colors_to_merge:
+        for small_color in colors_to_merge:
+            print(f"find small_color: {small_color}")
+            nearest_large_color = find_nearest_large_color(small_color, sorted_colors, area_threshold)
+            if nearest_large_color:
+                # 更新所有使用小面积颜色的路径
+                for path in root.findall('.//{http://www.w3.org/2000/svg}path'):
+                    if path.get('fill') == small_color:
+                        path.set('fill', nearest_large_color)
+                        # 更新 id
+                        for color_index, color in color_config.items():
+                            if color == nearest_large_color:
+                                path.set('id', color_index)
+                                break
+
+                # 更新颜色配置
+                for color_index, color in color_config.items():
+                    if color == small_color:
+                        del color_config[color_index]
+                        break
+    print(f"合并面积之后：{len(color_config)}")
 
     # 将 color_config 添加到 SVG 中
     metadata = ET.Element("metadata")
@@ -157,3 +202,17 @@ def merge_svg_files(file1, file2, output_file):
 
     # 保存合并后的 SVG
     tree1.write(output_file, encoding='utf-8', xml_declaration=True)
+
+
+def find_nearest_large_color(small_color, sorted_colors, area_threshold):
+    nearest_distance = float('inf')
+    nearest_large_color = None
+
+    for color, area in sorted_colors:
+        if area >= area_threshold:
+            distance = color_distance(small_color, color)
+            if distance < nearest_distance:
+                nearest_distance = distance
+                nearest_large_color = color
+
+    return nearest_large_color

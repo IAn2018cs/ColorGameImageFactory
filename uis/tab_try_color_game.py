@@ -3,6 +3,7 @@ import gradio as gr
 
 from app.colorful_svg import read_svg_metadata
 from app.colorful_svg import update_svg_colors
+from uis.tabs import TabId
 
 current_file_path = ""
 current_colors_config = {}
@@ -38,7 +39,6 @@ def start_change_color(colors):
         else:
             zero_colors[color_id] = "#ffffff"
     new_path = update_svg_colors(current_file_path, zero_colors)
-    print(new_path)
     return gr.Image(value=new_path, type="filepath")
 
 
@@ -47,7 +47,7 @@ def reset_colors(colors_dw):
 
 
 def build_try_color_game_ui():
-    with gr.TabItem("尝试填色游戏", id=3):
+    with gr.TabItem("尝试填色游戏", id=TabId.TRY_COLOR_GAME.value):
         with gr.Row():
             image = gr.Image(format="svg", visible=False, width=512, show_label=False)
             with gr.Column():

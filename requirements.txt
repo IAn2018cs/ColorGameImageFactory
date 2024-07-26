@@ -9,3 +9,4 @@ scipy
 pandas
 svgwrite
 vtracer
+shapely

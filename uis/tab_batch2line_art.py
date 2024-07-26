@@ -7,6 +7,7 @@ from app.tools import get_all_file_path
 from app.tools import get_current_datatime
 from app.tools import split_list_with_min_length
 from app.tools import zip_dir
+from uis.tabs import TabId
 
 
 def start_convert_line_art(source_path, target_path):
@@ -29,7 +30,7 @@ def start_convert_line_art(source_path, target_path):
 
 
 def build_batch2line_art_ui():
-    with gr.TabItem("批量转线稿图", id=1):
+    with gr.TabItem("批量转线稿图", id=TabId.BATCH2LINE_ART.value):
         with gr.Row():
             source_path = gr.Textbox(
                 placeholder="请填写服务器上的绝对路径（末尾不要带 / ）",
