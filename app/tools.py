@@ -6,11 +6,14 @@ import random
 import shutil
 import string
 import time
+from datetime import datetime
 from os import PathLike
+from pathlib import Path
 from typing import AnyStr
 
 import cv2
 import numpy as np
+import requests
 from PIL import Image
 
 
@@ -238,3 +241,36 @@ def convert2svg_image(path, after_delete: bool = True):
         delete_file(path)
 
     return svg_output_path
+
+
+def download_image_url(url: str, file_path: str) -> str:
+    response = requests.get(url, stream=True)
+
+    # 确保请求成功
+    response.raise_for_status()
+
+    # 获取Content-Type字段
+    content_type = response.headers['content-type']
+
+    # 根据Content-Type字段确定文件扩展名
+    if 'image/jpeg' in content_type:
+        ext = '.jpg'
+    elif 'image/png' in content_type:
+        ext = '.png'
+    elif 'image/webp' in content_type:
+        ext = '.webp'
+    else:
+        # 如果Content-Type字段不是以上几种，我们默认使用.jpg
+        ext = '.jpg'
+
+    # 设置图片保存的路径和文件名
+    timestamp = int(datetime.now().timestamp() * 1000)
+    save_path = Path(f"{file_path}/tmp_{timestamp}")  # 保存路径，省略了文件扩展名
+    save_path = save_path.with_suffix(ext)  # 添加正确的文件扩展名
+
+    # 将图片保存到本地
+    with open(save_path, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            if chunk:  # filter out keep-alive new chunks
+                f.write(chunk)
+    return str(save_path)

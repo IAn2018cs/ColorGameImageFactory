@@ -110,6 +110,21 @@ class MJBot:
         random_index = random.randint(1, 4)
         return self.change_image_and_fetch(new_task_id, TaskAction.UPSCALE, random_index)
 
+    def create_all_image_and_fetch(self, prompt: str, img_path: str = None):
+        task_id = self.create_image(prompt, img_path)
+        if task_id is None:
+            return None
+        result = self.__do_fetch__(task_id)
+        if result is None:
+            return None
+        new_task_id = result['id']
+        images = []
+        for index in range(1, 5):
+            image = self.change_image_and_fetch(new_task_id, TaskAction.UPSCALE, index)
+            if image:
+                images.append(image)
+        return images
+
     def change_image(self, task_id: str, action: TaskAction, index: int = 1, payload: dict = None,
                      notify_hook: str = None):
         change = {
@@ -130,7 +145,7 @@ class MJBot:
         new_task_id = self.change_image(task_id, action, index)
         if new_task_id is None:
             return None
-        result = self.__do_fetch__(new_task_id)
+        result = self.__do_fetch__(new_task_id, interval=1)
         if result:
             return result['imageUrl']
         return None

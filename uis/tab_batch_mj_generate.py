@@ -2,25 +2,22 @@
 
 import gradio as gr
 
-import app.config
 from app.colorful_svg_v2 import color_quantization
 from app.gen_tools import extract_line_by_gan
-from app.prompt_factory import create_sd_prompts
-from app.sd_tools import generate_image_by_sd
-from app.sd_tools import get_models
-from app.sd_tools import get_styles
-from app.sd_tools import get_train_loras
+from app.mj_bot import MJBot
+from app.prompt_factory import create_mj_prompts
 from app.tools import convert2svg_image
 from app.tools import create_path
+from app.tools import download_image_url
 from app.tools import generate_random_id
 from app.tools import resolve_relative_path
 from app.tools import zip_dir
 from uis.tabs import TabId
 from uis.tools import all_category
-from uis.tools import refresh_loras
-from uis.tools import refresh_models
-from uis.tools import sampling_method
-from uis.tools import schedule_type
+
+mj_model_list = ['niji 6', 'niji 5', 'v 6', 'v 5.2']
+
+mj_bot = MJBot()
 
 
 def convert2svg(batch_id, images_root_path):
@@ -47,31 +44,29 @@ def generate_quantization_images(quantization_batch_id, colorful_images, line_sv
     return svg_results
 
 
-def start_gan(category, image_count, model, lora, weights, trigger, negative, styles, sampling, schedule, step, cfg,
+def generate_image_by_mj(root_path: str, batch_id: str, prompt: str):
+    output_path = f'{root_path}/{batch_id}'
+    create_path(output_path)
+
+    # files = [download_image_url(mj_bot.create_single_image_and_fetch(prompt), output_path)]
+    files = []
+    images = mj_bot.create_all_image_and_fetch(prompt)
+    for image in images:
+        files.append(download_image_url(image, output_path))
+    return files
+
+
+def start_gan(category, image_count, mj_model,
               num_colors, min_ares):
     try:
-        prompt_count = min(6, image_count)
-        n_iter = max(int(image_count / prompt_count), 1)
-        prompts = create_sd_prompts(category, prompt_count)
+        prompts = create_mj_prompts(category, image_count)
 
         result = []
         root_path = resolve_relative_path(__file__, '../output')
         batch_id = generate_random_id(16)
         result.extend(
-            generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_path, sampling, schedule, step,
-                            styles, trigger, weights)
+            generate_images(batch_id, prompts, root_path, mj_model)
         )
-
-        if image_count > prompt_count:
-            last = image_count % prompt_count
-            if last > 0:
-                prompts = create_sd_prompts(category, last)
-                result.extend(
-                    generate_images(batch_id, cfg, lora, model, 1, negative, prompts, root_path, sampling, schedule,
-                                    step,
-                                    styles, trigger, weights)
-                )
-
         zip_file = zip_dir(f'{root_path}/{batch_id}', batch_id, root_path)
 
         line_art_batch_id = generate_random_id(16)
@@ -92,32 +87,21 @@ def start_gan(category, image_count, model, lora, weights, trigger, negative, st
         raise gr.Error(f"发生错误：{e}，请重试")
 
 
-def generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_path, sampling, schedule, step,
-                    styles, trigger, weights):
-    lora = str(lora).strip()
-    trigger = str(trigger).strip()
+def generate_images(batch_id, prompts, root_path, model):
     result = []
-    print(f"lora: {lora}")
-    print(f"trigger prompt: {trigger}")
+    print(f"model: {model}")
 
     for prompt in prompts:
-        new_prompt = ""
-        if lora != "" and lora != "None":
-            new_prompt += f'<lora:{lora}:{weights}>, '
-        if trigger != "" and trigger != "None":
-            new_prompt += f'{trigger}, '
-        new_prompt += prompt
-        images = generate_image_by_sd(
-            root_path, batch_id,
-            model, new_prompt, negative, step, cfg, sampling, schedule, 1024, 1024, styles,
-            n_iter
+        new_prompt = f"{prompt} --{model} --sref https://media.discordapp.net/ephemeral-attachments/1092492867185950852/1266327016358285408/1721986286279422.png?ex=66a80a2f&is=66a6b8af&hm=ef9d1c849f255230d504a60998ed6edabee9aa36fedae2723558f1f26f10820c&=&format=webp&quality=lossless&width=1310&height=1310"
+        images = generate_image_by_mj(
+            root_path, batch_id, new_prompt
         )
         result.extend(images)
     return result
 
 
-def build_batch_generate_v2_ui():
-    with gr.TabItem("SD 直接生图 + 彩图SVG 模式", id=TabId.BATCH_GENERATE_V2.value):
+def build_batch_mj_generate_ui():
+    with gr.TabItem("MJ 生图 + 彩图SVG 模式", id=TabId.BATCH_MJ_GENERATE.value):
         category = gr.Dropdown(
             choices=all_category,
             value=all_category[0],
@@ -126,81 +110,13 @@ def build_batch_generate_v2_ui():
             label="图片分类（比如 Food、Collections、Buildings 等，可以自定义）"
         )
         image_count = gr.Slider(
-            value=2,
+            value=1,
             minimum=1,
-            maximum=100,
+            maximum=50,
             step=1,
-            label="生成图片的数量"
+            label="生成图片的数量，这里真实的图片数量会乘 4"
         )
-        with gr.Row():
-            with gr.Column():
-                model = gr.Dropdown(
-                    value=app.config.default_color_sd_model,
-                    choices=get_models(),
-                    multiselect=False,
-                    label="Stable Diffusion checkpoint"
-                )
-                refresh_model_button = gr.Button("🔄", size="sm")
-                refresh_model_button.click(refresh_models, model, model)
-            with gr.Row(equal_height=False):
-                with gr.Column():
-                    lora = gr.Dropdown(
-                        value=app.config.default_color_sd_lora,
-                        choices=get_train_loras(),
-                        multiselect=False,
-                        label="Lora"
-                    )
-                    refresh_lora_button = gr.Button("🔄", size="sm")
-                    refresh_lora_button.click(refresh_loras, lora, lora)
-                weights = gr.Slider(
-                    value=app.config.default_color_sd_lora_weight,
-                    minimum=0,
-                    maximum=2,
-                    step=0.05,
-                    label="Lora weights"
-                )
-        trigger = gr.Textbox(
-            value=app.config.default_color_sd_prompt,
-            placeholder="Lora 的触发提示词（可以为空）",
-            label="Trigger prompt",
-        )
-        negative = gr.Textbox(
-            placeholder="反向提示词（可以为空）",
-            value=app.config.default_color_sd_negative,
-            label="Negative prompt"
-        )
-        styles = gr.Dropdown(
-            choices=get_styles(),
-            multiselect=True,
-            label="Styles"
-        )
-        with gr.Row():
-            sampling = gr.Dropdown(
-                choices=sampling_method,
-                value=app.config.default_color_sd_sampling,
-                multiselect=False,
-                label="Sampling method"
-            )
-            schedule = gr.Dropdown(
-                choices=schedule_type,
-                value=app.config.default_color_sd_schedule,
-                multiselect=False,
-                label="Schedule type"
-            )
-        step = gr.Slider(
-            value=app.config.default_color_sd_steps,
-            minimum=1,
-            maximum=150,
-            step=1,
-            label="Sampling steps"
-        )
-        cfg = gr.Slider(
-            value=app.config.default_color_sd_cfg,
-            minimum=1,
-            maximum=30,
-            step=0.5,
-            label="CFG Scale"
-        )
+        mj_model = gr.Radio(mj_model_list, value=mj_model_list[0], label="模型版本")
 
         num_colors = gr.Slider(
             value=30,
@@ -247,7 +163,7 @@ def build_batch_generate_v2_ui():
             fn=start_gan,
             inputs=[
                 category, image_count,
-                model, lora, weights, trigger, negative, styles, sampling, schedule, step, cfg,
+                mj_model,
                 num_colors, min_ares
             ],
             outputs=[

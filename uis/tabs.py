@@ -11,3 +11,4 @@ class TabId(enum.Enum):
     GENERATE_LINE_ART_SVG = 5
     IMAGE2SVG = 6
     BATCH_GENERATE_V2 = 7
+    BATCH_MJ_GENERATE = 8

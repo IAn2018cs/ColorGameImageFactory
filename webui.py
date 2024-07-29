@@ -3,6 +3,7 @@ import gradio as gr
 import app.config
 from app.tools import read_file_to_list_of_tuples
 from uis.tab_batch_generate_v2 import build_batch_generate_v2_ui
+from uis.tab_batch_mj_generate import build_batch_mj_generate_ui
 from uis.tab_gan_extract_line import build_gan_extract_line_ui
 from uis.tab_generate_line_art import build_generate_line_art_ui
 from uis.tab_generate_line_art_v2 import build_generate_line_art_v2_ui
@@ -46,6 +47,7 @@ def build_webui(default_tab: TabId):
             send_to_color_game_btn_list.append(build_batch_generate_v2_ui())
             send_to_color_game_btn_list.append(build_generate_line_art_ui())
             send_to_color_game_btn_list.append(build_generate_line_art_v2_ui())
+            send_to_color_game_btn_list.append(build_batch_mj_generate_ui())
             upload_button, reset_bt, image, colors = build_try_color_game_ui()
             build_gan_extract_line_ui()
             send_to_color_game_btn_list.append(build_image_to_svg_ui())
