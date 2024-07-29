@@ -90,9 +90,9 @@ def start_gan(category, image_count, mj_model,
 def generate_images(batch_id, prompts, root_path, model):
     result = []
     print(f"model: {model}")
-
+    sref = "https://media.discordapp.net/attachments/1262719142331551847/1267436192077451366/3.png?ex=66a8c770&is=66a775f0&hm=cedbf0e2b5c143dfb320d2a6271cad934b853eb8c07b8f6b35000279cae51600&=&format=webp&quality=lossless&width=1310&height=1310"
     for prompt in prompts:
-        new_prompt = f"{prompt} --{model} --sref https://media.discordapp.net/ephemeral-attachments/1092492867185950852/1266327016358285408/1721986286279422.png?ex=66a80a2f&is=66a6b8af&hm=ef9d1c849f255230d504a60998ed6edabee9aa36fedae2723558f1f26f10820c&=&format=webp&quality=lossless&width=1310&height=1310"
+        new_prompt = f"{prompt} --{model} --sref {sref}"
         images = generate_image_by_mj(
             root_path, batch_id, new_prompt
         )
