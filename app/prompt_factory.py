@@ -4,6 +4,7 @@ import json
 import app.config
 from app.llm_tools import generate_by_ollama
 from app.llm_tools import generate_by_openai
+from app.tools import get_image_data_url
 
 
 def extract_json(response):
@@ -14,49 +15,22 @@ def extract_json(response):
 
 
 def create_mj_prompts(category: str, prompt_count: int) -> list[str]:
-    system = """
-    请根据以下输入类型，批量生成用于 Midjourney 绘画模型的 prompt。每个 prompt 主要以英文短语组成，之间用英文 , 分割。生成的图片将用于填色游戏，所以图片的风格应该是漫画风，色彩鲜明，线条清晰。输出以 {"result": []} 的 JSON 格式呈现。
-
-    输入类型：Cat
-    输出：
-    {
+    system = """Please generate prompts in bulk for the Midjourney drawing model based on the following input types. Each prompt should mainly consist of English phrases separated by commas. The style of the images should be vibrant in color with clear and concise lines. The output should be presented in JSON format as {"result": []}."""
+    exp_1 = json.dumps({
         "result": [
-            {"prompt": "coloring book illustration of a cute ginger cat playing with butterflies in the garden, with a house and rainbow in the background, in the style of cartoon"},
-            {"prompt": "A cute ginger cat playing with butterflies in the garden, with a house and rainbow in the background, in the style of a cartoon with bright colors, like a children's book illustration"},
-            ...
+            "A cute ginger cat playing with butterflies in the garden, with a house and rainbow in the background, in the style of a cartoon with bright colors, like a children's book illustration"
         ]
-    }
-
-    输入类型：鸟类
-    输出：
-    {
+    })
+    exp_2 = json.dumps({
         "result": [
-            {"prompt": "coloring book illustration of a happy white cockatoo sits on the branch of an acacia tree, eating red berries and butterflies in its beak. The background is a blue sky with clouds. In the style of a cartoon coloring book, with thick lines, a black outline, colorful colors, and detailed design"},
-            {"prompt": "A beautiful cockatoo sits on the branch of a holly tree eating berries, with a butterfly flying around him and a sky with clouds in the background. The illustration is in a simple coloring book style for children, with a vector flat design using white and pastel colors with black outlines and clear edges for high details"},
-            ...
+            "coloring book illustration of a happy white cockatoo sits on the branch of an acacia tree, eating red berries and butterflies in its beak. The background is a blue sky with clouds. In the style of a cartoon coloring book, with thick lines, a black outline, colorful colors, and detailed design"
         ]
-    }
-
-    输入类型：Characters
-    输出：
-    {
+    })
+    exp_3 = json.dumps({
         "result": [
-            {"prompt": "A young couple hiking in the mountains with their dog by their side. The illustration is in a colorful cartoon style with line art. The man is wearing gray and black  while the woman wears a pink jacket over her head; they both have backpacks on their shoulders and are holding walking sticks. A golden retriever is next to them with a background of a green forest and mountain range"},
-            {"prompt": "A young couple hiking in the mountains, with their dog by their side. The man is wearing gray outdoor  and holding walking sticks while his wife wears pink trousers and has long brown hair. They both have backpacks on their backs. A golden retriever stands beside them. In the style of a cartoon. Vector illustration"},
-            ...
+            "A young couple hiking in the mountains with their dog by their side. The illustration is in a colorful cartoon style with line art. The man is wearing gray and black  while the woman wears a pink jacket over her head; they both have backpacks on their shoulders and are holding walking sticks. A golden retriever is next to them with a background of a green forest and mountain range"
         ]
-    }
-    """.strip()
-    prompt = f'现在请根据以下输入类型生成 {prompt_count}' + ' 条类似的 prompt，以 {"result": []} 的 JSON 格式输出：\n'
-    prompt += f'输入类型：{category}\n'
-    prompt += """输出：
-        {
-            "result": [
-                {"prompt": ""},
-                {"prompt": ""},
-                ...
-            ]
-        }""".strip()
+    })
 
     messages = [
         {
@@ -65,7 +39,34 @@ def create_mj_prompts(category: str, prompt_count: int) -> list[str]:
         },
         {
             "role": "user",
-            "content": prompt
+            "content": "Type: Cat, Number: 1"
+        },
+
+        {
+            "role": "assistant",
+            "content": exp_1
+        },
+        {
+            "role": "user",
+            "content": "Type: 鸟类, Number: 1"
+        },
+
+        {
+            "role": "assistant",
+            "content": exp_2
+        },
+        {
+            "role": "user",
+            "content": "Type: Characters, Number: 1"
+        },
+
+        {
+            "role": "assistant",
+            "content": exp_3
+        },
+        {
+            "role": "user",
+            "content": f"Type: {category}, Number: {prompt_count}"
         }
     ]
     if 'ollama' in app.config.default_llm_type:
@@ -74,55 +75,30 @@ def create_mj_prompts(category: str, prompt_count: int) -> list[str]:
         output = generate_by_openai(app.config.default_llm_model, messages, json_format=True)
 
     result = extract_json(output)
-    return [item['prompt'] for item in result['result']]
+    return [item for item in result['result']]
 
 
 def create_sd_prompts(category: str, prompt_count: int) -> list[str]:
-    system = """
-    请根据以下输入类型，批量生成用于 Stable Diffusion 绘画模型的 prompt。每个 prompt 主要以英文单词或短语组成，之间用英文 , 分割。生成的图片将用于填色游戏，所以图片的风格应该是漫画风，色彩鲜明，线条清晰。输出以 {"result": []} 的 JSON 格式呈现。
+    system = """Please generate prompts in bulk for the Stable Diffusion drawing model based on the theme type. Each prompt should mainly consist of English words or phrases separated by commas. The style of the images should be vibrant in color with clear and concise lines. The output should be presented in JSON format as {"result": []}."""
 
-    输入类型：Collections
-    输出：
-    {
+    exp_1 = json.dumps({
         "result": [
-            {"prompt": "flower, pink flower, overalls, bouquet, braid, closed eyes, shirt, brown hair, hug, white shirt, smile, holding, short sleeves, leaf, long hair, orange flower, white flower, heart, 2girls, multiple girls, open mouth, sitting, red flower, indoors, holding bouquet, yellow flower, dress, 1boy, blue flower, tulip, blue overalls, happy birthday, english text, striped, table, denim, 1girl, long sleeves"},
-            {"prompt": "book, reading, library, glasses, shelves, pages, bookmark, study, lamp, cozy, chair, student, desk, open book, novel, author, literature, reading glasses, notebook, pen, writing, studying, quiet, knowledge, bookshelf, learning, quiet place, reading corner, coffee cup, armchair, reading room, soft light"},
-            ...
+            "flower, pink flower, overalls, bouquet, braid, closed eyes, shirt, brown hair, hug, white shirt, smile, holding, short sleeves, leaf, long hair, orange flower, white flower, heart, 2girls, multiple girls, open mouth, sitting, red flower, indoors, holding bouquet, yellow flower, dress, 1boy, blue flower, tulip, blue overalls, happy birthday, english text, striped, table, denim, 1girl, long sleeves",
+            "book, reading, library, glasses, shelves, pages, bookmark, study, lamp, cozy, chair, student, desk, open book, novel, author, literature, reading glasses, notebook, pen, writing, studying, quiet, knowledge, bookshelf, learning, quiet place, reading corner, coffee cup, armchair, reading room, soft light"
         ]
-    }
-
-    输入类型：鸟类
-    输出：
-    {
+    })
+    exp_2 = json.dumps({
         "result": [
-            {"prompt": "duck, flower, no humans, bird, outdoors, sky, day, cloud, barrel, plant, grass, fence, blue sky, water, rose, duckling, tree, red flower, animal, bush, animal focus, house, bucket, vines, pink flower, yellow flower, building"},
-            {"prompt": "parrot, jungle, tropical, bright colors, flying, green leaves, branch, colorful feathers, birdwatching, nature, perch, exotic, wildlife, rainforest, beak, wing, feathers, tree branch, vivid, natural habitat, animal, squawking, avian, greenery, lush, natural, foliage, tropical bird, outdoor, perched, beak open"},
-            ...
+            "duck, flower, no humans, bird, outdoors, sky, day, cloud, barrel, plant, grass, fence, blue sky, water, rose, duckling, tree, red flower, animal, bush, animal focus, house, bucket, vines, pink flower, yellow flower, building",
+            "parrot, jungle, tropical, bright colors, flying, green leaves, branch, colorful feathers, birdwatching, nature, perch, exotic, wildlife, rainforest, beak, wing, feathers, tree branch, vivid, natural habitat, animal, squawking, avian, greenery, lush, natural, foliage, tropical bird, outdoor, perched, beak open"
         ]
-    }
-
-    输入类型：Characters
-    输出：
-    {
+    })
+    exp_3 = json.dumps({
         "result": [
-            {"prompt": "1girl, flower, striped shirt, shirt, bicycle, ponytail, sneakers, smiling, blue eyes, playground, sunny day, swing, bench, short hair, waving, skirt, school uniform, backpack, hand up, jumping, laughing, park, smiling, eyes closed, schoolbag, grass, running, cheerful, friends, talking, playing, walking, waving hand, waving goodbye"},
-            {"prompt": "1boy, cap, shorts, t-shirt, ball, playing, grass, sun, cheerful, running, happy, sneakers, playground, friends, laughing, energetic, summer day, child, outdoor activity, fun, smile, jumping, open space, blue sky, trees, sports, exercise, joyful, game, field, bright colors"},
-            ...
+            "1girl, flower, striped shirt, shirt, bicycle, ponytail, sneakers, smiling, blue eyes, playground, sunny day, swing, bench, short hair, waving, skirt, school uniform, backpack, hand up, jumping, laughing, park, smiling, eyes closed, schoolbag, grass, running, cheerful, friends, talking, playing, walking, waving hand, waving goodbye",
+            "1boy, cap, shorts, t-shirt, ball, playing, grass, sun, cheerful, running, happy, sneakers, playground, friends, laughing, energetic, summer day, child, outdoor activity, fun, smile, jumping, open space, blue sky, trees, sports, exercise, joyful, game, field, bright colors"
         ]
-    }
-    """.strip()
-
-    prompt = f'现在请根据以下输入类型生成 {prompt_count}' + ' 条类似的 prompt，以 {"result": []} 的 JSON 格式输出：\n'
-    prompt += f'输入类型：{category}\n'
-    prompt += """输出：
-    {
-        "result": [
-            {"prompt": ""},
-            {"prompt": ""},
-            ...
-        ]
-    }""".strip()
-
+    })
     messages = [
         {
             "role": "system",
@@ -130,7 +106,34 @@ def create_sd_prompts(category: str, prompt_count: int) -> list[str]:
         },
         {
             "role": "user",
-            "content": prompt
+            "content": "Type: Collections, Number: 2"
+        },
+
+        {
+            "role": "assistant",
+            "content": exp_1
+        },
+        {
+            "role": "user",
+            "content": "Type: 鸟类, Number: 2"
+        },
+
+        {
+            "role": "assistant",
+            "content": exp_2
+        },
+        {
+            "role": "user",
+            "content": "Type: Characters, Number: 2"
+        },
+
+        {
+            "role": "assistant",
+            "content": exp_3
+        },
+        {
+            "role": "user",
+            "content": f"Type: {category}, Number: {prompt_count}"
         }
     ]
     if 'ollama' in app.config.default_llm_type:
@@ -139,4 +142,48 @@ def create_sd_prompts(category: str, prompt_count: int) -> list[str]:
         output = generate_by_openai(app.config.default_llm_model, messages, json_format=True)
 
     result = extract_json(output)
-    return [item['prompt'] for item in result['result']]
+    return [item for item in result['result']]
+
+
+def des_image_prompt(image_path: str) -> str:
+    system = """You are an AI specialized in creating concise yet detailed image descriptions for training image generation models. Analyze the input image and produce a description that:
+
+1. Consists of short phrases or brief sentences
+2. Separates each phrase or sentence with a comma (,) or period (.)
+3. Starts with the main subject and its setting
+4. Describes key visual elements, including colors, styles, and notable details
+5. Uses clear, specific language
+6. Emphasizes distinct colors and clear, crisp lines
+7. Incorporates relevant artistic terms
+
+Your output should be a single line of text, with phrases separated by commas or periods, similar to this example:
+
+Vector illustration of a squirrel character in a forest setting. Golden-brown fur, large expressive eyes. Holding a red strawberry. Stylized cartoon aesthetic with bold outlines and flat colors."""
+
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": system
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": get_image_data_url(image_path)
+                    }
+                }
+            ]
+        }
+    ]
+    output = generate_by_openai(app.config.default_llm_model, messages)
+    return output
+
+
+if __name__ == '__main__':
+    prompts = des_image_prompt('./../temp/des/img_7.png')
+    print(prompts)
+    # print('prompts:')
+    # for p in create_mj_prompts("Animals", 3):
+    #     print(f"{p}\n")

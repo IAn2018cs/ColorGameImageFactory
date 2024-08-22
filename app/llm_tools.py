@@ -31,7 +31,6 @@ def generate_by_openai(model: str, messages: list[dict], json_format: bool = Fal
         data = {
             "model": model,
             "messages": messages,
-            "frequency_penalty": 1.1,
             "temperature": 0.8,
             "stream": False
         }

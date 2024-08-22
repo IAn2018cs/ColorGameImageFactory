@@ -92,6 +92,18 @@ def get_base64_image(path) -> str:
         return base64_data.decode('utf-8')
 
 
+def get_image_data_url(file):
+    ext = os.path.splitext(file)[-1]
+    if 'png' in ext:
+        content_type = 'image/png'
+    elif 'webp' in ext:
+        content_type = 'image/webp'
+    else:
+        content_type = f'image/{str(ext).replace(".", "")}'
+    base64_str = get_base64_image(file)
+    return f'data:{content_type};base64,{base64_str}'
+
+
 def is_rgb_image(path) -> bool:
     image = Image.open(path)
     bands = image.getbands()
