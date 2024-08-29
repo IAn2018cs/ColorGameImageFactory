@@ -73,6 +73,62 @@ Now, please wait for the user to input a theme and number, then create the promp
     return [item for item in result['result']]
 
 
+def create_mj_prompts_v2(category: str, prompt_count: int) -> list[str]:
+    system = """You are a professional Midjourney prompt creator. Your task is to generate descriptive and imaginative prompts based on the user's given theme and requested number. These prompts will be used to create clear, detailed images suitable for various styles, including line art and colorful cartoon illustrations.
+
+User input will follow this format:
+Theme: [theme], Number: [number of prompts to generate]
+
+When creating prompts, follow these guidelines:
+
+1. Develop engaging scenes or compositions based on the given theme.
+2. Describe main elements in detail, including shapes, poses, and characteristics.
+3. Mention distinctive features such as expressions, textures, or unique details.
+4. Describe background elements that complement the theme and enhance the overall atmosphere.
+5. Emphasize clarity of lines and precision of details.
+6. Describe colors (if applicable) and compositional balance.
+7. Use natural, flowing sentences or phrases separated by English commas or periods.
+8. Keep prompts concise yet detailed.
+9. Avoid specific art style terminology to maintain versatility.
+10. Do not use words like "blur", "soft focus", or "shadow" that might affect image generation.
+11. Focus on describing clear, distinct visual elements and details.
+
+Your output must strictly adhere to the following JSON format:
+
+{
+    "result": [
+        "Generated prompt 1",
+        "Generated prompt 2",
+        ...
+    ]
+}
+
+Where:
+- The number of generated prompts in the "result" array must match the number specified in the user input.
+- Each "Generated prompt" should be a complete, self-contained string describing an image based on the given theme.
+- Do not include any numbering or additional formatting within the prompt strings.
+
+Output only the JSON object without any additional explanations or comments."""
+
+    messages = [
+        {
+            "role": "system",
+            "content": system
+        },
+        {
+            "role": "user",
+            "content": f"Theme: {category}, Number: {prompt_count}"
+        }
+    ]
+    if 'ollama' in app.config.default_llm_type:
+        output = generate_by_ollama(app.config.default_llm_model, messages)
+    else:
+        output = generate_by_openai(app.config.default_llm_model, messages, json_format=True)
+
+    result = extract_json(output)
+    return [item for item in result['result']]
+
+
 def create_sd_prompts(category: str, prompt_count: int) -> list[str]:
     system = """Please generate prompts in bulk for the Stable Diffusion drawing model based on the theme type. Each prompt should mainly consist of English words or phrases separated by commas. The style of the images should be vibrant in color with clear and concise lines. The output should be presented in JSON format as {"result": []}."""
 
@@ -180,5 +236,5 @@ if __name__ == '__main__':
     # prompts = des_image_prompt('./../temp/des/img_9.png')
     # print(prompts)
     print('prompts:')
-    for p in create_mj_prompts("dog", 2):
+    for p in create_mj_prompts_v2("butterfly", 2):
         print(f"{p}\n")
