@@ -79,7 +79,7 @@ def generate_images(batch_id, prompts, root_path):
         prompt = f'{prompt} <lora:{lora_name}:{lora_weight}>'
         images = generate_image_by_flux(root_path, batch_id, prompt)
         if images:
-            result.extend(images[0])
+            result.append(images[0])
     return result
 
 
