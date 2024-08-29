@@ -38,6 +38,8 @@ default_line_sd_schedule: str = helper.get_str_value('sd.default_line_sd_schedul
 default_line_sd_steps: int = helper.get_int_value('sd.default_line_sd_steps', '20')
 default_line_sd_cfg: float = helper.get_float_value('sd.default_line_sd_cfg', '7')
 gan_api_host: str = helper.get_str_value('sd.gan_api_host', '')
+flux_color_lora: str = helper.get_str_value('sd.flux_color_lora', '')
+flux_color_lora_weight: float = helper.get_float_value('sd.flux_color_lora_weight', '1')
 
 # mj
 mj_host: str = helper.get_str_value('mj.mj_host', '')

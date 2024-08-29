@@ -57,7 +57,7 @@ def generate_image_by_sd(root_path: str, batch_id: str,
                          sampler_name: str, scheduler: str,
                          width: int, height: int,
                          styles: list[str] = None, n_iter: int = 1,
-                         alwayson_scripts: dict = None):
+                         alwayson_scripts: dict = None, **kwargs):
     try:
         output_path = f'{root_path}/{batch_id}'
         create_path(output_path)
@@ -84,6 +84,8 @@ def generate_image_by_sd(root_path: str, batch_id: str,
             data['styles'] = styles
         if alwayson_scripts:
             data['alwayson_scripts'] = alwayson_scripts
+        if kwargs:
+            data.update(kwargs)
         response = requests.post(url, json=data)
         print(response.json()['info'])
         images = response.json()['images']
@@ -168,3 +170,24 @@ def convert_image_line_art_anime_denoise(root_path: str, batch_id: str, image_pa
         new_path = convert2svg_image(path)
         result.append(new_path)
     return result
+
+
+def generate_image_by_flux(root_path: str, batch_id: str,
+                           prompt: str,
+                           steps: int = 20, cfg: float = 4.0,
+                           sampler_name: str = 'Euler', scheduler: str = 'Simple',
+                           n_iter: int = 1,
+                           width: int = 1024, height: int = 1024):
+    return generate_image_by_sd(
+            root_path, batch_id,
+            "flux1-dev.safetensors", prompt, '', steps, 1,
+            sampler_name, scheduler, width, height, n_iter=n_iter, distilled_cfg_scale=cfg
+        )
+
+
+if __name__ == '__main__':
+    images = generate_image_by_flux(
+        '../output', "test_flux",
+        "A majestic lion standing on a rock formation under a bright yellow sun. Its mane is a vibrant orange with sharply defined lines, while the background features flat, green grass and a clear blue sky. The lion's fierce expression is highlighted with bold black outlines, creating a striking contrast against the warm color palette. The style is reminiscent of pop art with exaggerated proportions and minimal shading. <lora:colorgame_flux_lora_v5_llm_no_trigger_animals_000004000:0.9>",
+        n_iter=4
+    )

@@ -34,6 +34,8 @@ default_line_sd_schedule =
 default_line_sd_steps =
 default_line_sd_cfg =
 gan_api_host =
+flux_color_lora =
+flux_color_lora_weight =
 
 [mj]
 mj_host =
