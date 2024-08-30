@@ -9,6 +9,7 @@ from uis.tab_gan_extract_line import build_gan_extract_line_ui
 from uis.tab_generate_line_art import build_generate_line_art_ui
 from uis.tab_generate_line_art_v2 import build_generate_line_art_v2_ui
 from uis.tab_image_to_svg import build_image_to_svg_ui
+from uis.tab_lineart_to_svg import build_line_art2svg_ui
 from uis.tab_try_color_game import build_try_color_game_ui
 from uis.tab_try_color_game import upload_file
 from uis.tabs import TabId
@@ -53,6 +54,7 @@ def build_webui(default_tab: TabId):
             upload_button, reset_bt, image, colors = build_try_color_game_ui()
             build_gan_extract_line_ui()
             send_to_color_game_btn_list.append(build_image_to_svg_ui())
+            build_line_art2svg_ui()
 
         # 连接生成线稿的 Tab 和填色游戏的 Tab
         for item in send_to_color_game_btn_list:
