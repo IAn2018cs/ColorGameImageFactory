@@ -1,4 +1,4 @@
-gradio
+gradio==4.40.0
 requests
 requests-toolbelt
 pillow
