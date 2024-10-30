@@ -7,7 +7,7 @@ import requests
 from requests_toolbelt import MultipartEncoder
 
 import app.config
-from app.tools import create_path
+from app.tools import create_path, make_square
 
 
 def is_hidden(filepath):
@@ -22,6 +22,8 @@ def extract_line_by_gan(source_dir, dst_dir):
     for filename in os.listdir(source_dir):
         file_path = os.path.join(source_dir, filename)
         if os.path.isfile(file_path) and not is_hidden(file_path):
+            # 先确保为方形
+            make_square(file_path)
             files.append(file_path)
     # 准备 MultipartEncoder
     fields = {}

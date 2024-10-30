@@ -286,3 +286,48 @@ def download_image_url(url: str, file_path: str) -> str:
             if chunk:  # filter out keep-alive new chunks
                 f.write(chunk)
     return str(save_path)
+
+
+def save_txt_to_file(file_path: str | Path, content: str, overwrite: bool = True):
+    if not overwrite and os.path.exists(file_path):
+        return
+    with open(file_path, 'w', encoding='utf-8') as file:
+        file.write(content)
+
+
+def make_square(image_path):
+    img = None
+    try:
+        # 打开图片
+        img = Image.open(image_path)
+
+        # 获取宽高
+        width, height = img.size
+
+        # 如果已经是方形就直接返回
+        if width == height:
+            img.close()
+            return
+
+        # 取较小的边作为正方形边长
+        size = min(width, height)
+
+        # 计算裁剪的左上角坐标
+        left = (width - size) // 2
+        top = (height - size) // 2
+
+        # 裁剪
+        img_cropped = img.crop((left, top, left + size, top + size))
+
+        # 保存覆盖原图
+        img_cropped.save(image_path)
+
+        # 关闭图片
+        img_cropped.close()
+
+    except Exception as e:
+        print(f"处理图片出错: {e}")
+    finally:
+        # 确保原图被关闭
+        if img:
+            img.close()

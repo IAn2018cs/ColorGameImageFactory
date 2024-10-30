@@ -10,3 +10,4 @@ pandas
 svgwrite
 vtracer
 shapely
+natsort
