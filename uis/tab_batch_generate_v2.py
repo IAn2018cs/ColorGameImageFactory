@@ -107,10 +107,17 @@ def generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_
         if trigger != "" and trigger != "None":
             new_prompt += f'{trigger}, '
         new_prompt += prompt
+        hr_config = {
+            "enable_hr": True,
+            "denoising_strength": 0.6,
+            "hr_scale": 2.6,
+            "hr_upscaler": "R-ESRGAN 4x+ Anime6B",
+            "hr_cfg": 5,
+        }
         images = generate_image_by_sd(
             root_path, batch_id,
-            model, new_prompt, negative, step, cfg, sampling, schedule, 1024, 1024, styles,
-            n_iter
+            model, new_prompt, negative, step, cfg, sampling, schedule, 768, 768, styles,
+            n_iter, None, **hr_config
         )
         result.extend(images)
     return result
