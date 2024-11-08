@@ -88,7 +88,9 @@ def generate_image_by_sd(root_path: str, batch_id: str,
             data['alwayson_scripts'] = alwayson_scripts
         if kwargs:
             data.update(kwargs)
+        print(data)
         response = requests.post(url, json=data)
+        print(response.text)
         print(response.json()['info'])
         images = response.json()['images']
         files = []
@@ -188,8 +190,23 @@ def generate_image_by_flux(root_path: str, batch_id: str,
 
 
 if __name__ == '__main__':
-    images = generate_image_by_flux(
-        '../output', "test_flux",
-        "A majestic lion standing on a rock formation under a bright yellow sun. Its mane is a vibrant orange with sharply defined lines, while the background features flat, green grass and a clear blue sky. The lion's fierce expression is highlighted with bold black outlines, creating a striking contrast against the warm color palette. The style is reminiscent of pop art with exaggerated proportions and minimal shading. <lora:colorgame_flux_lora_v5_llm_no_trigger_animals_000004000:0.9>",
-        n_iter=4
+    # images = generate_image_by_flux(
+    #     '../output', "test_flux",
+    #     "A majestic lion standing on a rock formation under a bright yellow sun. Its mane is a vibrant orange with sharply defined lines, while the background features flat, green grass and a clear blue sky. The lion's fierce expression is highlighted with bold black outlines, creating a striking contrast against the warm color palette. The style is reminiscent of pop art with exaggerated proportions and minimal shading. <lora:colorgame_flux_lora_v5_llm_no_trigger_animals_000004000:0.9>",
+    #     n_iter=4
+    # )
+    hr_config = {
+        "enable_hr": True,
+        "denoising_strength": 0.6,
+        "hr_scale": 2.8,
+        "hr_upscaler": "R-ESRGAN 4x+ Anime6B",
+        "hr_cfg": 5,
+        "hr_additional_modules": [],
+    }
+    images = generate_image_by_sd(
+        '../output', "test_sd",
+        "color_fill_output_sdxl-colorfill-plus-000007",
+        "A majestic lion standing on a rock formation under a bright yellow sun. Its mane is a vibrant orange with sharply defined lines, while the background features flat, green grass and a clear blue sky. The lion's fierce expression is highlighted with bold black outlines, creating a striking contrast against the warm color palette. The style is reminiscent of pop art with exaggerated proportions and minimal shading.",
+        "", 20, 5, "DPM++ 2M SDE", "Karras", 768, 768, [],
+        1, None, **hr_config
     )

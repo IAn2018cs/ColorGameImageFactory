@@ -110,9 +110,10 @@ def generate_images(batch_id, cfg, lora, model, n_iter, negative, prompts, root_
         hr_config = {
             "enable_hr": True,
             "denoising_strength": 0.6,
-            "hr_scale": 2.6,
+            "hr_scale": 2.8,
             "hr_upscaler": "R-ESRGAN 4x+ Anime6B",
             "hr_cfg": 5,
+            "hr_additional_modules": [],
         }
         images = generate_image_by_sd(
             root_path, batch_id,
