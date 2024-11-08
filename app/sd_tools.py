@@ -44,7 +44,9 @@ def get_train_loras() -> list[str]:
         shutil.copy(f'{path}/{item}', f'{new_path}/{item}')
         return name
 
-    return get_all_file_path(app.config.train_output_path, ["safetensors", "pt"], get_file_name)
+    result = get_all_file_path(app.config.train_output_path, ["safetensors", "pt"], get_file_name)
+    result.insert(0, "  ")
+    return result
 
 
 def get_styles() -> list[str]:
