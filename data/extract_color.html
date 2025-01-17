@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG 区域标记示例</title>
+    <style>
+        svg {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #ccc;
+        }
+
+        text {
+            font-size: 4px;
+            fill: blue;
+            /* 标号颜色 */
+            font-weight: bold;
+        }
+
+        .region {
+            stroke: black;
+            /* 区域边缘颜色 */
+            stroke-width: 0.5;
+            /* 边缘宽度 */
+            cursor: pointer;
+            /* 指针样式 */
+        }
+    </style>
+</head>
+
+<body>
+
+    <input type="file" id="svgFileInput" accept=".svg" />
+    <button id="zoomButton">缩放</button>
+    <button id="toggleColorButton">一键填充/取消颜色</button>
+    <svg id="targetSvg" width='1024' height='1024' viewBox="0 0 1024 1024" preserveAspectRatio="xMidYMid meet"></svg>
+
+
+    <script>
+        const svgFileInput = document.getElementById('svgFileInput');
+        const targetSvg = document.getElementById('targetSvg');
+        const zoomButton = document.getElementById('zoomButton');
+
+
+        // 添加新按钮的引用
+        const toggleColorButton = document.getElementById('toggleColorButton');
+
+        let isAllColored = false; // 跟踪当前的填充状态
+        // 添加按钮点击事件
+        toggleColorButton.addEventListener('click', () => {
+            const elements = targetSvg.querySelectorAll('.region');
+            isAllColored = !isAllColored; // 切换状态
+            const numbers = targetSvg.querySelectorAll('text');  // 获取所有标号
+
+            elements.forEach((elem) => {
+                const originalColor = elem.getAttribute('data-original-fill');
+                const area = calculatePathArea(elem);
+
+                // 只处理非黑色且非细线的区域
+                if (!(isColorCloseToBlack(originalColor) || area < threshold || isThinShape(elem))) {
+                    if (isAllColored) {
+                        // 填充原始颜色
+                        elem.setAttribute('fill', originalColor);
+                    } else {
+                        // 填充白色
+                        elem.setAttribute('fill', 'white');
+                    }
+                }
+            });
+            // 处理标号的显示/隐藏
+            numbers.forEach(text => {
+                if (isAllColored) {
+                    text.style.display = 'none';  // 填充颜色时隐藏标号
+                } else {
+                    text.style.display = '';  // 取消填充时显示标号
+                }
+            });
+            // 更新按钮文本
+            toggleColorButton.textContent = isAllColored ? '一键取消颜色' : '一键填充颜色';
+        });
+
+        svgFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file && file.type === 'image/svg+xml') {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    processSvgContent(e.target.result);
+                };
+                reader.readAsText(file);
+            } else {
+                alert('请选择一个有效的 SVG 文件。');
+            }
+        });
+
+        zoomButton.addEventListener('click', () => {
+            if (targetSvg.classList.contains('zoomed')) {
+                targetSvg.classList.remove('zoomed');
+                targetSvg.setAttribute('viewBox', '0 0 1024 1024');
+            } else {
+                targetSvg.classList.add('zoomed');
+                const bbox = targetSvg.getBBox();
+                targetSvg.setAttribute('viewBox', `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
+            }
+        });
+
+        function processSvgContent(svgContent) {
+            console.log('processSvgContent:::', svgContent)
+            // 清空之前的内容
+            targetSvg.innerHTML = '';
+
+            // 插入读取的 SVG 内容
+            targetSvg.innerHTML = svgContent;
+
+            console.log("WIDTH ::: ", targetSvg.querySelector("svg").getAttribute("width"))
+            svgWidth = targetSvg.querySelector("svg").getAttribute("width");
+            svgHeight = targetSvg.querySelector("svg").getAttribute("height");
+            if (svgWidth != null && svgWidth.endsWith("pt")) {
+                targetSvg.querySelector("svg").setAttribute("width", parseFloat(svgWidth));
+                targetSvg.querySelector("svg").setAttribute("height", parseFloat(svgHeight));
+            }
+
+            const elements = targetSvg.querySelectorAll('circle, rect, ellipse, polygon, path');
+            let regionIndex = 1;
+            threshold = 50; // 设置阈值，小于阈值的区域不添加标号
+            elements.forEach((elem) => {
+                elem.classList.add('region'); // 添加 class 以应用样式
+                const area = calculatePathArea(elem);
+
+                // 保存初始填充颜色并设置为白色
+                const originalColor = elem.getAttribute('fill');
+                // 如果原颜色是比较接近黑色的话就保留原颜色，不重置成白色
+                if (isColorCloseToBlack(originalColor) || area < threshold || isThinShape(elem)) {
+                    elem.setAttribute('fill', originalColor);
+                    elem.setAttribute('data-original-fill', originalColor);
+                } else {
+                    elem.setAttribute('data-original-fill', originalColor);
+                    elem.setAttribute('fill', 'white');
+                }
+
+
+                let cx, cy;
+
+                switch (elem.tagName) {
+                    case 'circle':
+                        cx = parseFloat(elem.getAttribute('cx'));
+                        cy = parseFloat(elem.getAttribute('cy'));
+                        break;
+                    case 'rect':
+                        cx = parseFloat(elem.getAttribute('x')) + parseFloat(elem.getAttribute('width')) / 2;
+                        cy = parseFloat(elem.getAttribute('y')) + parseFloat(elem.getAttribute('height')) / 2;
+                        break;
+                    case 'ellipse':
+                        cx = parseFloat(elem.getAttribute('cx'));
+                        cy = parseFloat(elem.getAttribute('cy'));
+                        break;
+                    case 'polygon':
+                    case 'path':
+                        const bbox = elem.getBBox();
+                        cx = bbox.x + bbox.width / 2;
+                        cy = bbox.y + bbox.height / 2;
+                        break;
+                }
+
+                if (typeof cx !== 'undefined' && typeof cy !== 'undefined' && !(isColorCloseToBlack(originalColor) || area < threshold || isThinShape(elem))) {
+                    let text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', cx);
+                    text.setAttribute('y', cy);
+                    text.setAttribute('dy', '.35em'); // 垂直居中
+                    text.setAttribute('text-anchor', 'middle'); // 水平居中
+                    text.textContent = regionIndex++;
+                    targetSvg.appendChild(text);
+
+                    // 添加点击事件切换颜色
+                    elem.addEventListener('click', () => {
+                        isThinShape(elem, true);
+
+                        const currentFill = elem.getAttribute('fill');
+                        console.log('Current fill color:', currentFill);
+
+                        const originalFill = elem.getAttribute('data-original-fill');
+                        console.log('Original fill color:', originalFill);
+
+                        if (currentFill === 'white') {
+                            elem.setAttribute('fill', originalFill);
+                            console.log('Set to original fill color:', originalFill);
+                        } else {
+                            elem.setAttribute('fill', 'white');
+                            console.log('Set to white');
+                        }
+
+                        // Double-check the final attribute value
+                        console.log('Final fill attribute:', elem.getAttribute('fill'));
+
+                        console.log('CX, CY:::', cx, cy);
+                    });
+
+                }
+
+            });
+
+            const bbox = targetSvg.getBBox();
+            targetSvg.setAttribute('viewBox', `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
+
+
+
+        }
+
+
+        // 判断颜色是否接近黑色
+        function isColorCloseToBlack(color) {
+            if (!color) return false;
+            const hexColor = color.replace('#', '');
+            const rgb = parseInt(hexColor, 16);
+            const r = (rgb >> 16) & 0xFF;
+            const g = (rgb >> 8) & 0xFF;
+            const b = rgb & 0xFF;
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            return brightness < 28;
+        }
+
+        function isThinShape(svgElement, log = false) {
+            const bbox = svgElement.getBBox();
+            if (bbox.width === 0 || bbox.height === 0) return true;
+
+            // 1. 基本尺寸计算
+            const pathLength = svgElement.getTotalLength();
+            const diagonal = Math.sqrt(bbox.width ** 2 + bbox.height ** 2);
+            const strokeWidth = parseFloat(svgElement.getAttribute("stroke-width")) || 1;
+
+            // 2. 计算形状特征
+            const pathArea = calculatePathArea(svgElement);
+            const bboxArea = bbox.width * bbox.height;
+
+            // 3. 计算关键比率
+            const aspectRatio = Math.min(bbox.width, bbox.height) / Math.max(bbox.width, bbox.height);
+            const lengthAreaRatio = pathLength * pathLength / pathArea; // 周长平方与面积的比值
+            const fillRatio = pathArea / bboxArea;
+
+            // 4. 特征判断
+            const isExtremeThin = aspectRatio < 0.1; // 极度细长
+            const isLineLike = lengthAreaRatio > 100; // 线条特征明显
+            const isLowFill = fillRatio < 0.2; // 填充率低
+
+            if (log) {
+                console.log({
+                    aspectRatio,
+                    lengthAreaRatio,
+                    fillRatio,
+                    pathArea,
+                    bboxArea,
+                    pathLength,
+                    diagonal
+                });
+            }
+
+            // 5. 综合判断
+            // 必须同时满足多个条件才被认为是线条
+            return (isExtremeThin && isLineLike) ||
+                (isExtremeThin && isLowFill) ||
+                (isLineLike && isLowFill);
+        }
+
+
+
+        function calculatePathArea(pathElement, samplePoints = 100) {
+            const totalLength = pathElement.getTotalLength();
+            let points = [];
+
+            // 按照路径长度均匀采样点
+            for (let i = 0; i <= samplePoints; i++) {
+                const point = pathElement.getPointAtLength((i / samplePoints) * totalLength);
+                points.push([point.x, point.y]);
+            }
+
+            // 使用 Shoelace formula 计算面积
+            let area = 0;
+            for (let i = 0; i < points.length - 1; i++) {
+                area += (points[i][0] * points[i + 1][1] - points[i + 1][0] * points[i][1]);
+            }
+            area += (points[points.length - 1][0] * points[0][1] - points[0][0] * points[points.length - 1][1]);
+            return Math.abs(area / 2);
+        }
+
+
+
+    </script>
+
+</body>
+
+</html>

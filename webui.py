@@ -5,6 +5,7 @@ from app.tools import read_file_to_list_of_tuples
 from uis.tab_batch_flux_generate import build_batch_flux_generate_ui
 from uis.tab_batch_generate_v2 import build_batch_generate_v2_ui
 from uis.tab_batch_mj_generate import build_batch_mj_generate_ui
+from uis.tab_extract_color import build_extract_color_ui
 from uis.tab_gan_extract_line import build_gan_extract_line_ui
 from uis.tab_generate_line_art import build_generate_line_art_ui
 from uis.tab_generate_line_art_v2 import build_generate_line_art_v2_ui
@@ -55,6 +56,7 @@ def build_webui(default_tab: TabId):
             build_gan_extract_line_ui()
             send_to_color_game_btn_list.append(build_image_to_svg_ui())
             build_line_art2svg_ui()
+            build_extract_color_ui()
 
         # 连接生成线稿的 Tab 和填色游戏的 Tab
         for item in send_to_color_game_btn_list:
