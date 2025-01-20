@@ -35,6 +35,7 @@ schedule_type = [
     "Exponential",
     "Polyexponential",
     "SGM Uniform",
+    "Simple"
 ]
 
 
