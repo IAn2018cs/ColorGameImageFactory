@@ -72,4 +72,4 @@ def build_webui(default_tab: TabId):
 
 
 if __name__ == '__main__':
-    build_webui(default_tab=TabId.BATCH_FLUX_GENERATE)
+    build_webui(default_tab=TabId.BATCH_GENERATE_V2)
