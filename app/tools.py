@@ -93,15 +93,62 @@ def get_base64_image(path) -> str:
 
 
 def get_image_data_url(file):
-    ext = os.path.splitext(file)[-1]
+    ext = os.path.splitext(file)[-1].lower()
     if 'png' in ext:
         content_type = 'image/png'
     elif 'webp' in ext:
         content_type = 'image/webp'
+    elif 'jpg' in ext or 'jpeg' in ext:
+        content_type = 'image/jpeg'
     else:
         content_type = f'image/{str(ext).replace(".", "")}'
     base64_str = get_base64_image(file)
     return f'data:{content_type};base64,{base64_str}'
+
+
+def get_compressed_image_data_url(file, max_size=720, quality=85):
+    """
+    获取压缩后的图片 data URL，默认压缩到 720p
+    :param file: 图片路径
+    :param max_size: 最大边长，默认 720
+    :param quality: JPEG 压缩质量，默认 85
+    :return: data URL 格式的 base64 字符串
+    """
+    from io import BytesIO
+
+    img = Image.open(file)
+
+    # 计算缩放比例，保持宽高比
+    width, height = img.size
+    if width > height:
+        if width > max_size:
+            ratio = max_size / width
+            new_size = (max_size, int(height * ratio))
+        else:
+            new_size = (width, height)
+    else:
+        if height > max_size:
+            ratio = max_size / height
+            new_size = (int(width * ratio), max_size)
+        else:
+            new_size = (width, height)
+
+    # 缩放图片
+    if new_size != (width, height):
+        img = img.resize(new_size, Image.Resampling.LANCZOS)
+
+    # 转换为 RGB（处理 RGBA 或其他模式）
+    if img.mode in ('RGBA', 'P'):
+        img = img.convert('RGB')
+
+    # 保存到内存缓冲区
+    buffer = BytesIO()
+    img.save(buffer, format='JPEG', quality=quality)
+    img.close()
+
+    # 转换为 base64
+    base64_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    return f'data:image/jpeg;base64,{base64_str}'
 
 
 def is_rgb_image(path) -> bool:
